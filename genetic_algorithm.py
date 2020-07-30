@@ -2,7 +2,7 @@
 """
 Created on Wed Jul 29 12:00:03 2020
 
-@author: esteb
+@author: Gabriel
 """
 
 import schedule as sc

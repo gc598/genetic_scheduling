@@ -2,12 +2,15 @@
 """
 Created on Tue Jul 28 09:53:00 2020
 
-@author: esteb
+@author: Gabriel
 """
 import schedule as sc
 
 def generate_random_schedules(pop_size):
-    schedules = []
     
+    schedules = []
+    for i in range(pop_size):
+        sch = sc.Schedule()
+        
     return schedules
 

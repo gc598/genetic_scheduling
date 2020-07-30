@@ -2,7 +2,7 @@
 """
 Created on Tue Jul 28 16:07:51 2020
 
-@author: esteb
+@author: Gabriel
 """
 
 import numpy as np
@@ -15,7 +15,11 @@ analysts = range(15)
 
 class Machine:
     def __init__(self,timetable=None,mac_id=0):
-        # list of tuples indicating activity starting and end times. any time not within the bounds of a tuple is idle
+        """
+        timetable: list of tuples indicating activity starting and end times. 
+                any time not within the bounds of a tuple indicates an idle period
+        mac_id: id of the machine as defined by the indices of array number_machines
+        """
         self.timetable = timetable
         self.mac_id = mac_id
     
@@ -31,15 +35,38 @@ class Machine:
 
 class Task:
     
-    def __init__(self,earliest_start_time=0,due_date=160,duration=160,machine=None,analysts=None,nextTask=None):
-        #time will be counted by units of 6 min starting at 8 pm and finishing at 12pm so 160=12pm
+    def __init__(self,earliest_start_time=0,duration=160,machine=None,analysts=None):
+        """
+        earliest_start_date: eartliest time this task can start to be completed
+        machine: integer indicating the machine that can run this task
+        analysts: list of indices of analysts who have the required competences to run this task
+        nextTask: tuple indicating whether this task precedes an other one, and if so indicates the max
+                duration between the end of this task and the beginning of the next one
+        """
         self.earliest_start_time=earliest_start_time
-        self.due_date=due_date
         self.duration=duration
         self.machine = machine
         self.analysts = analysts
-        #next task is used in case the next task need to be performed within a certain time after completion this task 
-        self.nextTask = nextTask
+ 
+    
+class Job:
+    
+    def __init__(self,list_tasks = [],due_date = 160):
+        """
+
+        Parameters
+        ----------
+        list_tasks : TYPE, optional
+            DESCRIPTION. The default is []. 2D array contains tasks ordered by precedence (first dimension)
+            contains also max duration between task i and task i+1 (np.inf if no such duration) 
+            in second dimension
+        Returns
+        -------
+        None.
+
+        """
+        self.due_date = due_date
+        self.list_tasks = list_tasks
         
 
 
@@ -47,7 +74,10 @@ class Task:
 class Schedule:
     
     def __init__(self,timetable=None):
-        #the schedule's timetable will contain a list of Tasks, ordered by starting date
+        """
+        the schedule's timetable will contain a list of Tasks, ordered by starting date
+        machines is 2D array containing the machine objects for each type of machine
+        """
         self.timetable = timetable
         self.machines = [[] for k in range(len(number_machines))]   
         for i in range(len(number_machines)):
