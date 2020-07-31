@@ -16,7 +16,7 @@ analysts = range(15)
 class Machine:
     def __init__(self,timetable=None,mac_id=0):
         """
-        timetable: list of tuples indicating activity starting and end times. 
+        timetable: list of tuples indicating activity starting time, end time, and task being executed. 
                 any time not within the bounds of a tuple indicates an idle period
         mac_id: id of the machine as defined by the indices of array number_machines
         """
@@ -35,18 +35,24 @@ class Machine:
 
 class Task:
     
-    def __init__(self,earliest_start_time=0,duration=160,machine=None,analysts=None):
+    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=None,analysts=None):
         """
         earliest_start_date: eartliest time this task can start to be completed
         machine: integer indicating the machine that can run this task
         analysts: list of indices of analysts who have the required competences to run this task
-        nextTask: tuple indicating whether this task precedes an other one, and if so indicates the max
-                duration between the end of this task and the beginning of the next one
+        job_id: job to which the task belongs
         """
         self.earliest_start_time=earliest_start_time
+        self.start_time = self.earliest_start_time
         self.duration=duration
-        self.machine = machine
+        self.end_time = self.start_time + self.duration
+        self.mac_id = machine
         self.analysts = analysts
+        self.job_id = job_id
+        
+    def print_task(self):
+        tup = (self.start_time,self.end_time)
+        print("task: ",str(self),str(tup),"on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
  
     
 class Job:
@@ -73,28 +79,42 @@ class Job:
 
 class Schedule:
     
-    def __init__(self,timetable=None):
+    def __init__(self,timetable):
         """
         the schedule's timetable will contain a list of Tasks, ordered by starting date
         machines is 2D array containing the machine objects for each type of machine
+        min_time is where the schedule starts i.e. it's the beginning of the work week
+        max_time is the end of the work week (end of the schedule)
         """
         self.timetable = timetable
+        self.min_time = 0
+        self.max_time = 1000
         self.machines = [[] for k in range(len(number_machines))]   
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
-                self.machines[i].append (Machine([],i))    
+                self.machines[i].append(Machine([],i))    
         
-    def fitness(self):
-        fit = 0
-        for (index,start_time,task) in self.timetable:
-            if task.due_date >= start_time:
-                fit+=1
-        return fit
     
-    # returns true if there is a machine of type i idle at time defined by the givent interval
+    # returns true if there is a machine of type i idle at time defined by the given interval
     def machine_i_idle_interval(self,i,start,end):
         if end<=start:
             return False
+        for j in range(len(self.machines[i])):
+            if self.machines[i][j].is_idle_at_interval(start,end):
+                return j
+        return -1
+        
+    def find_index_task(self,task):
+        for i in range(len(self.timetable)):
+            if self.timetable[i] == task:
+                return i
+        return -1
+    
+    def print_schedule(self):
+        for task in self.timetable:
+            task.print_task()
+            
+            
         
         
                             
