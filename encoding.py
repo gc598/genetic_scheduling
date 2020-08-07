@@ -9,6 +9,24 @@ import copy
 import random
 
 
+"""
+removes the given task from the given schedule.updates machines consequently
+"""
+def remove_task_from_timetable(sch,task):
+    job = sch.job_list[task.job_id]
+    sch.timetable.remove(task)
+    machines = sch.machines[task.mac_id]
+    for machine in machines:
+        if (task.start_time,task.end_time,task) in machine.timetable:
+            machine.timetable.remove((task.start_time,task.end_time,task))
+            return task
+    return None
+
+def remove_job_from_timetable(sch,job):
+    for task in job.list_tasks:
+        remove_task_from_timetable(sch,task)
+    
+
 def place_task_timetable(sch,task):
     """
     returns (True,None) if there is an available machine to execute the task
@@ -16,10 +34,12 @@ def place_task_timetable(sch,task):
         and will have to be replaced on the schedule later
     """
     sch.append(task)
-    machine = task.mac_id
     index = sch.machine_i_idle_interval(task.start_time,task.end_time)
     if index==-1:
-        return -1
+        return
+    machine_to_operate = sch.machines[task.mac_id][index]
+    machine_to_operate.timetable.append((task.start_time,task.end_time,task))
+    
     
     
 
@@ -41,7 +61,8 @@ def randomly_place_job_timetable(job,sch):
     for i in range(1,len(job.list_tasks)):
         current_task = job.list_tasks[i]
         prev_task = job.list_tasks[i-1]
-        start_time = random.randint(prev_task.end_time,prev_task.end_time+random.randint(0,10))
+        max_separation_duration = job.max_separation_durations[i] #max time between end of i-1 and start of i
+        start_time = random.randint(prev_task.end_time,prev_task.end_time+random.randint(0,max_separation_duration))
         current_task.start_time = start_time
         current_task.end_time = current_task.start_time + current_task.duration
         sch.timetable.append(current_task)
@@ -60,7 +81,7 @@ def generate_random_schedules(pop_size,job_list):
     sch = None
     schedules = []
     for i in range(pop_size):
-        sch = sc.Schedule([])
+        sch = sc.Schedule([],job_list)
         print(sch)
         #we keep looping while all the jobs have not been scheduled
         for j in range(len(job_list)):

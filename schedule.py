@@ -66,6 +66,10 @@ class Job:
             DESCRIPTION. The default is []. 2D array contains tasks ordered by precedence (first dimension)
             contains also max duration between task i and task i+1 (np.inf if no such duration) 
             in second dimension
+            
+            max_separation_durations: lists the maximum durations between the end of task i-1 and 
+                the start of task i. The first element will be -1, to keep the length of 
+                max_separation_durations equal to that of list_tasks
         Returns
         -------
         None.
@@ -73,20 +77,26 @@ class Job:
         """
         self.due_date = due_date
         self.list_tasks = list_tasks
+        self.max_separation_durations = []
+        self.max_separation_durations.append(-1)
+        for j in range(len(self.list_tasks)-1):
+            self.max_separation_durations.append(10)
         
 
 
 
 class Schedule:
     
-    def __init__(self,timetable):
+    def __init__(self,timetable,job_list):
         """
         the schedule's timetable will contain a list of Tasks, ordered by starting date
         machines is 2D array containing the machine objects for each type of machine
         min_time is where the schedule starts i.e. it's the beginning of the work week
         max_time is the end of the work week (end of the schedule)
+        job_list contains the list of jobs to schedule
         """
         self.timetable = timetable
+        self.job_list = job_list
         self.min_time = 0
         self.max_time = 1000
         self.machines = [[] for k in range(len(number_machines))]   
@@ -95,7 +105,7 @@ class Schedule:
                 self.machines[i].append(Machine([],i))    
         
     
-    # returns true if there is a machine of type i idle at time defined by the given interval
+    # returns the index of a machine of type i idle at time defined by the given interval if there is one
     def machine_i_idle_interval(self,i,start,end):
         if end<=start:
             return False
