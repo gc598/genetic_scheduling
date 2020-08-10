@@ -34,6 +34,34 @@ class Machine:
                 print("in fct is_idle",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True   
+    
+
+class Analyst:
+    
+    def __init(self,timetable=None,an_id=0):
+        
+
+        """
+        
+
+        Parameters
+        ----------
+        timetable : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        timetable will include lunchbreaks and off work time. Those natural off times will be instanciated
+        upon creation of an analyst. 
+        an_id is the id of the analyst
+
+        Returns
+        -------
+        None.
+
+        """
+        
+        self.timetable = timetable
+        self.an_id= an_id
+        
         
 
 class Task:
