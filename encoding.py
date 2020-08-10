@@ -14,7 +14,11 @@ removes the given task from the given schedule.updates machines consequently
 """
 def remove_task_from_timetable(sch,task):
     job = sch.job_list[task.job_id]
-    sch.timetable.remove(task)
+    print("removing job ",str(job))
+    try:
+        sch.timetable.remove(task)
+    except ValueError as err:
+        pass
     machines = sch.machines[task.mac_id]
     for machine in machines:
         if (task.start_time,task.end_time,task) in machine.timetable:
@@ -27,18 +31,20 @@ def remove_job_from_timetable(sch,job):
         remove_task_from_timetable(sch,task)
     
 
+
 def place_task_timetable(sch,task):
     """
     returns (True,None) if there is an available machine to execute the task
     returns (False,task) if there is no available machine, in which case task will be evicted from the machine
         and will have to be replaced on the schedule later
     """
-    sch.append(task)
-    index = sch.machine_i_idle_interval(task.start_time,task.end_time)
+    sch.timetable.append(task)
+    index = sch.machine_i_idle_interval(task.mac_id,task.start_time,task.end_time)
     if index==-1:
+        print("not available",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return
     machine_to_operate = sch.machines[task.mac_id][index]
-    machine_to_operate.timetable.append((task.start_time,task.end_time,task))
+    machine_to_operate.timetable.append(task)
     
     
     
@@ -55,7 +61,8 @@ def randomly_place_job_timetable(job,sch):
     start_time = random.randint(current_task.earliest_start_time,max_time-current_task.duration)
     current_task.start_time = start_time
     current_task.end_time = current_task.start_time + current_task.duration
-    sch.timetable.append(current_task)
+    if current_task not in sch.timetable:
+        place_task_timetable(sch,current_task)
     tasks_added_so_far.append(current_task)
     
     for i in range(1,len(job.list_tasks)):
@@ -65,12 +72,13 @@ def randomly_place_job_timetable(job,sch):
         start_time = random.randint(prev_task.end_time,prev_task.end_time+random.randint(0,max_separation_duration))
         current_task.start_time = start_time
         current_task.end_time = current_task.start_time + current_task.duration
-        sch.timetable.append(current_task)
+        flag = 0
+        if current_task not in sch.timetable:
+            flag=place_task_timetable(sch,current_task)
         tasks_added_so_far.append(current_task)
         #if it's not possible to fit this job in the schedule, we restart the function
-        if(current_task.end_time > max_time):
-            for task in tasks_added_so_far:
-                sch.timetable.remove(task)
+        if(current_task.end_time > max_time or flag==-1):
+            remove_job_from_timetable(sch,job)
             print("impossible: restart")    
             randomly_place_job_timetable(job,sch)
                   

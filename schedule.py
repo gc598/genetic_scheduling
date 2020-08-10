@@ -27,8 +27,11 @@ class Machine:
     def is_idle_at_interval(self,start,end):
         if not self.timetable:
             return True
-        for(start_active,end_active) in self.timetable:
-            if (start>=start_active and start <= end_active) or (end >= start_active and end <= end_active):
+        for task in self.timetable:
+            start_active = task.start_time
+            end_active = task.end_time
+            if (start>start_active and start < end_active) or (end > start_active and end < end_active):
+                print("in fct is_idle",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True   
         
@@ -108,7 +111,8 @@ class Schedule:
     # returns the index of a machine of type i idle at time defined by the given interval if there is one
     def machine_i_idle_interval(self,i,start,end):
         if end<=start:
-            return False
+            return -1
+        #for all machines of type i, check if one of them is idle
         for j in range(len(self.machines[i])):
             if self.machines[i][j].is_idle_at_interval(start,end):
                 return j
