@@ -38,7 +38,7 @@ class Machine:
 
 class Analyst:
     
-    def __init(self,timetable=None,an_id=0):
+    def __init__(self,timetable=None,an_id=0,name = "G"):
         
 
         """
@@ -58,15 +58,27 @@ class Analyst:
         None.
 
         """
-        
+        self.name = name
         self.timetable = timetable
         self.an_id= an_id
+        
+    #returns true if the analyst is idle during the given interval
+    def is_idle_at_interval(self,start,end):
+        if not self.timetable:
+            return True
+        for task in self.timetable:
+            start_active = task.start_time
+            end_active = task.end_time
+            if (start>start_active and start < end_active) or (end > start_active and end < end_active):
+                print("in fct is_idle",str(start),str(end),str(start_active),str(end_active))
+                return False
+        return True  
         
         
 
 class Task:
     
-    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=None,analysts=None):
+    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=None,analysts_ind=None):
         """
         earliest_start_date: eartliest time this task can start to be completed
         machine: integer indicating the machine that can run this task
@@ -78,12 +90,15 @@ class Task:
         self.duration=duration
         self.end_time = self.start_time + self.duration
         self.mac_id = machine
-        self.analysts = analysts
+        self.analysts_indices = analysts_ind
         self.job_id = job_id
         
     def print_task(self):
         tup = (self.start_time,self.end_time)
         print("task: ",str(self),str(tup),"on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
+        
+            
+            
  
     
 class Job:
@@ -118,13 +133,14 @@ class Job:
 
 class Schedule:
     
-    def __init__(self,timetable,job_list):
+    def __init__(self,timetable,job_list,analysts = None):
         """
         the schedule's timetable will contain a list of Tasks, ordered by starting date
         machines is 2D array containing the machine objects for each type of machine
         min_time is where the schedule starts i.e. it's the beginning of the work week
         max_time is the end of the work week (end of the schedule)
         job_list contains the list of jobs to schedule
+        analysts: list of all the analysts index by their id
         """
         self.timetable = timetable
         self.job_list = job_list
@@ -134,6 +150,10 @@ class Schedule:
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
                 self.machines[i].append(Machine([],i))    
+        self.analysts = analysts
+        for i in range(8):
+            self.analysts.append(Analyst([],i,"Joe"))
+            
         
     
     # returns the index of a machine of type i idle at time defined by the given interval if there is one
@@ -145,6 +165,18 @@ class Schedule:
             if self.machines[i][j].is_idle_at_interval(start,end):
                 return j
         return -1
+    
+    # checks if there is an available analyst for the given task
+    def analyst_idle_task(self,task):
+        start = task.start_time
+        end = task.end_time
+        if end>=start:
+            return -1
+        for index in task.analysts_indices:
+            analyst = self.analysts[index]
+            if analyst.is_idle_at_interval(start,end):
+                return index
+        return -1        
         
     def find_index_task(self,task):
         for i in range(len(self.timetable)):
@@ -160,5 +192,9 @@ class Schedule:
         
         
                             
+        
+        
+        
+        
         
         

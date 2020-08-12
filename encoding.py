@@ -19,12 +19,20 @@ def remove_task_from_timetable(sch,task):
         sch.timetable.remove(task)
     except ValueError as err:
         pass
+    
+    #removes task from machine's timetable
     machines = sch.machines[task.mac_id]
     for machine in machines:
-        if (task.start_time,task.end_time,task) in machine.timetable:
-            machine.timetable.remove((task.start_time,task.end_time,task))
-            return task
-    return None
+        if task in machine.timetable:
+            machine.timetable.remove(task)
+            
+        
+    #removes task from analyst's timetable
+    for index in range(len(task.analysts_indices)):
+        analyst = sch.analysts[index]
+        if task in analyst.timetable:
+            analyst.timetable.remove(task)
+        
 
 def remove_job_from_timetable(sch,job):
     for task in job.list_tasks:
@@ -39,12 +47,24 @@ def place_task_timetable(sch,task):
         and will have to be replaced on the schedule later
     """
     sch.timetable.append(task)
+    
+    #add the task to the machine's timetable
     index = sch.machine_i_idle_interval(task.mac_id,task.start_time,task.end_time)
     if index==-1:
         print("not available",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return
     machine_to_operate = sch.machines[task.mac_id][index]
     machine_to_operate.timetable.append(task)
+    
+    #add the task to the analyst's timetable
+    index = sch.analyst_i_idle_task(task)
+    if index==-1:
+        print("not available",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
+        return
+    appointed_analyst = sch.analysts[index]
+    appointed_analyst.timetable.append(task)
+    
+    
     
     
     
@@ -85,11 +105,12 @@ def randomly_place_job_timetable(job,sch):
             
         
 
+
 def generate_random_schedules(pop_size,job_list):
     sch = None
     schedules = []
     for i in range(pop_size):
-        sch = sc.Schedule([],job_list)
+        sch = sc.Schedule([],job_list,[])
         print(sch)
         #we keep looping while all the jobs have not been scheduled
         for j in range(len(job_list)):

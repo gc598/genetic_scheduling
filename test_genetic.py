@@ -26,11 +26,13 @@ job1 = sc.Job([s1,s2,s3],120)
 #sample test 3
 u3 = sc.Task(15,5,2,3,[2,3,7])
 u2 = sc.Task(30,30,2,3,[2,3,7,5])
-u1 = sc.Task(30,10,2,3,[2,3,7])
+u1 = sc.Task(30,10,2,3,[2,3,7]) 
 job2 = sc.Job([u1,u2,u3],160)
 
 job_list = [job0,job1,job2]
 schedules = encoding.generate_random_schedules(5, job_list)
+
+
 
 
 
