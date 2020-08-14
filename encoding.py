@@ -51,20 +51,18 @@ def place_task_timetable(sch,task):
     #add the task to the machine's timetable
     index = sch.machine_i_idle_interval(task.mac_id,task.start_time,task.end_time)
     if index==-1:
-        print("not available",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
+        print("not available mac",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return
     machine_to_operate = sch.machines[task.mac_id][index]
     machine_to_operate.timetable.append(task)
     
     #add the task to the analyst's timetable
-    index = sch.analyst_i_idle_task(task)
+    index = sch.analyst_idle_task(task)
     if index==-1:
-        print("not available",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
+        print("not available an",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return
     appointed_analyst = sch.analysts[index]
     appointed_analyst.timetable.append(task)
-    
-    
     
     
     
@@ -110,17 +108,49 @@ def generate_random_schedules(pop_size,job_list):
     sch = None
     schedules = []
     for i in range(pop_size):
-        sch = sc.Schedule([],job_list,[])
+        sch = sc.Schedule([],copy.deepcopy(job_list),[])
         print(sch)
         #we keep looping while all the jobs have not been scheduled
-        for j in range(len(job_list)):
+        for j in range(len(sch.job_list)):
             """
             given the fact that operations in a job must be carried out within 1H of one another, we'll
             process them jointly
             """
-            job = job_list[j]
+            job = sch.job_list[j]
             randomly_place_job_timetable(job,sch)
         schedules.append(sch)
             
     return schedules
+
+
+def uniform_crossover(sch1,sch2):
+    """
+        Parameters
+        ----------
+        sch1 : Schedule
+            1st schedule
+        sch2 : Schedule
+            2nd schedule, having the same job list (and same tasks and machines etc) as schedule 1
+    
+        Returns a crossover schedule combining the 2 given ones
+        -------
+        This crossover function will select 'genes' pseudo uniformly randomly between the 2
+        given schedules.
+        'pseudo' means that whenever it's not possible to fit one gene into the new schedule for constraint
+        reasons, the gene from the other given will be selected from the other given schedule. We will
+        keep track of which schedule has participated more to the offspring to consequently calibrate
+        the choice probabilities, therefore artificially keeping the participation of each gene to the 
+        offspring close to 50%.
+    """
+    
+    job_list = sch1.job_list
+    offspring = sc.Schedule([],job_list,[])
+    # number of genes allocated to the offspring coming from schedule1 and schedule2
+    balance_genes = (0,0)
+    # probability to select a gene from schedule 1
+    prob = 0.5
+    
+    
+    
+    
 

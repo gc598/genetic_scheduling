@@ -82,7 +82,7 @@ class Task:
         """
         earliest_start_date: eartliest time this task can start to be completed
         machine: integer indicating the machine that can run this task
-        analysts: list of indices of analysts who have the required competences to run this task
+        analysts: list of integer indices of analysts who have the required competences to run this task
         job_id: job to which the task belongs
         """
         self.earliest_start_time=earliest_start_time
@@ -97,6 +97,10 @@ class Task:
         tup = (self.start_time,self.end_time)
         print("task: ",str(self),str(tup),"on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
         
+    def copy_task(self):
+        copied_task = Task(self.earliest_start_time,self.duration,self.job_id,self.mac_id
+                           ,self.analysts_indices)
+        return copied_task
             
             
  
@@ -127,6 +131,14 @@ class Job:
         self.max_separation_durations.append(-1)
         for j in range(len(self.list_tasks)-1):
             self.max_separation_durations.append(10)
+            
+    def copy_job(self):
+        copied_job = Job([],self.due_date)
+        copied_job.max_separation_durations = self.max_separation_durations
+        copied_job.list_tasks = []
+        for task in self.list_tasks:
+            copied_job.list_tasks.append(task.copy_task())
+        return copied_job
         
 
 
@@ -143,7 +155,9 @@ class Schedule:
         analysts: list of all the analysts index by their id
         """
         self.timetable = timetable
-        self.job_list = job_list
+        self.job_list = []
+        for job in job_list:
+            self.job_list.append(job.copy_job())
         self.min_time = 0
         self.max_time = 1000
         self.machines = [[] for k in range(len(number_machines))]   
@@ -170,7 +184,7 @@ class Schedule:
     def analyst_idle_task(self,task):
         start = task.start_time
         end = task.end_time
-        if end>=start:
+        if end<=start:
             return -1
         for index in task.analysts_indices:
             analyst = self.analysts[index]
