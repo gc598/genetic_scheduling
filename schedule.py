@@ -86,7 +86,7 @@ class Analyst:
 
 class Task:
     
-    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=None,analysts_ind=None):
+    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=0,analysts_ind=None):
         """
         earliest_start_date: eartliest time this task can start to be completed
         machine: integer indicating the machine that can run this task
@@ -108,6 +108,9 @@ class Task:
     def copy_task(self):
         copied_task = Task(self.earliest_start_time,self.duration,self.job_id,self.mac_id
                            ,self.analysts_indices)
+        copied_task.start_time = self.start_time
+        copied_task.end_time = self.end_time
+        copied_task.job_id = self.job_id
         return copied_task
             
             
@@ -147,6 +150,10 @@ class Job:
         for task in self.list_tasks:
             copied_job.list_tasks.append(task.copy_task())
         return copied_job
+    
+    def print_job(self):
+        for task in self.list_tasks:
+            task.prtint_task()
         
 
 

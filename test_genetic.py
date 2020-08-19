@@ -34,7 +34,8 @@ job_list = [copy.deepcopy(job0),copy.deepcopy(job1),copy.deepcopy(job2)]
 schedules = encoding.generate_random_schedules(5, job_list)
 sch0 = schedules[0]
 sch1 = schedules[1]
-# off = ga.uniform_crossover(sch1,sch2)
+sch2 = schedules[2]
+# off = ga.uniform_crossover(sch0,sch1)
 
 
 

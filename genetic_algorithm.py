@@ -29,47 +29,57 @@ def uniform_crossover(sch1,sch2):
         offspring close to 50%.
     """
     
-    job_list = sch1.job_list
-    offspring = sc.Schedule([],job_list,[])
+    offspring = sc.Schedule([],[],[])
     # number of genes allocated to the offspring coming from schedule1 and schedule2
     balance_genes = [0,0]
     # probability to select a gene from schedule 1
     prob = 0.5
     
     for i in range(len(sch1.job_list)):
-        print("iteration",str(i))
+        #print("iteration",str(i))
         job1 = sch1.job_list[i].copy_job()
         job2 = sch2.job_list[i].copy_job()
         
+        """
         for j in range(len(job1.list_tasks)):
             job1.list_tasks[j].print_task()
             job2.list_tasks[j].print_task()
-        
+        """
         p = random.uniform(0,1)
         
         if p<prob:
             flag = en.place_job_timetable(offspring,job1)
             # if the job(gene) from sch1 cannot be placed, place the corresponding one from sch2
+            if flag:
+                print("placed job1 case1")
             if not flag:
                 flag = en.place_job_timetable(offspring,job2)
+                if flag:
+                    print("placed job2 case1")
                 if not flag:
                     #if the crossover is not working, lauch it again
                     return uniform_crossover(sch1, sch2)
                 balance_genes[1] +=1 #if we placed a job from schedule 2, increment counter for schedule 2
-            balance_genes[0] +=1 #same if we placed a job from schedule 1
-        
+                offspring.job_list.append(job2.copy_job())
+            offspring.job_list.append(job1.copy_job())
         else:
             flag = en.place_job_timetable(offspring,job2)
+            
+            if flag:
+                print("placed job2 case 2")
             # if the job(gene) from sch2 cannot be placed, place the corresponding one from sch1
             if not flag:
                 flag = en.place_job_timetable(offspring,job1)
+                if flag:
+                    print("placed job1 case2")
                 if not flag:
                     #if the crossover is not working, lauch it again
                     return uniform_crossover(sch1, sch2)
-                balance_genes[0] +=1 #if we placed a job from schedule 2, increment counter for schedule 2
-            balance_genes[1] +=1 #same if we placed a job from schedule 1   
+                balance_genes[0] +=1 #if we placed a job from schedule 1, increment counter for schedule 1
+                offspring.job_list.append(job1.copy_job())
+            offspring.job_list.append(job2.copy_job())
         
-        prob = (balance_genes[0]+0.0) / (balance_genes[0]+balance_genes[1])
+        #prob = (balance_genes[0]+0.0) / (balance_genes[0]+balance_genes[1])
     return offspring
                 
             
