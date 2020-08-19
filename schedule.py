@@ -31,9 +31,14 @@ class Machine:
             start_active = task.start_time
             end_active = task.end_time
             if (start>start_active and start < end_active) or (end > start_active and end < end_active):
-                print("in fct is_idle",str(start),str(end),str(start_active),str(end_active))
+                print("in fct is_idle_mac",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True   
+    
+    def print_machine(self):
+        for task in self.timetable:
+            task.print_task()
+            
     
 
 class Analyst:
@@ -70,10 +75,13 @@ class Analyst:
             start_active = task.start_time
             end_active = task.end_time
             if (start>start_active and start < end_active) or (end > start_active and end < end_active):
-                print("in fct is_idle",str(start),str(end),str(start_active),str(end_active))
+                print("in fct is_idle_an",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True  
-        
+ 
+    def print_analyst(self):
+        for task in self.timetable:
+            task.print_task()       
         
 
 class Task:
@@ -193,6 +201,9 @@ class Schedule:
         return -1        
         
     def find_index_task(self,task):
+        """
+        returns the index of the given task in the schedule's timetable, or -1 if it's not there
+        """
         for i in range(len(self.timetable)):
             if self.timetable[i] == task:
                 return i

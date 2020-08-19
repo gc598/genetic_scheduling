@@ -1,4 +1,4 @@
-00# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Wed Jul 29 15:01:05 2020
 
@@ -32,6 +32,9 @@ job2 = sc.Job([copy.deepcopy(u1),copy.deepcopy(u2),copy.deepcopy(u3)],160)
 
 job_list = [copy.deepcopy(job0),copy.deepcopy(job1),copy.deepcopy(job2)]
 schedules = encoding.generate_random_schedules(5, job_list)
+sch0 = schedules[0]
+sch1 = schedules[1]
+# off = ga.uniform_crossover(sch1,sch2)
 
 
 

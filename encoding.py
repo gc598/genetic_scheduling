@@ -8,7 +8,6 @@ import schedule as sc
 import copy
 import random
 
-
 """
 removes the given task from the given schedule.updates machines consequently
 """
@@ -38,6 +37,7 @@ def remove_job_from_timetable(sch,job):
     for task in job.list_tasks:
         remove_task_from_timetable(sch,task)
     
+    
 
 
 def place_task_timetable(sch,task):
@@ -52,7 +52,7 @@ def place_task_timetable(sch,task):
     index = sch.machine_i_idle_interval(task.mac_id,task.start_time,task.end_time)
     if index==-1:
         print("not available mac",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
-        return
+        return False
     machine_to_operate = sch.machines[task.mac_id][index]
     machine_to_operate.timetable.append(task)
     
@@ -60,20 +60,51 @@ def place_task_timetable(sch,task):
     index = sch.analyst_idle_task(task)
     if index==-1:
         print("not available an",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
-        return
+        return False
     appointed_analyst = sch.analysts[index]
     appointed_analyst.timetable.append(task)
+    return True
     
     
+def place_job_timetable(sch,job):
+    """
+    place jobs on the timetable, whse tasks have already known starting times and duration times.
+    returns True if successfully added, False if it couild not be added.
+    """      
+    if not job:
+        return
+    
+    max_time = sch.max_time
+    
+    for i in range(0,len(job.list_tasks)):
+        current_task = job.list_tasks[i]
+        start_time = current_task.start_time    
+        if current_task not in sch.timetable:
+            flag=place_task_timetable(sch,current_task)
+        #if it's not possible to fit this job in the schedule, return false
+        if(current_task.end_time > max_time or not flag):
+            remove_job_from_timetable(sch,job)
+            print("impossible: abort")    
+            return False
+    return True
     
 
 
 def randomly_place_job_timetable(job,sch):
+    """
+    This function assigns random random working times to the tasks in the different jobs before placing 
+    them on the timetable.
+    """
     if not job:
         return
     print(len(sch.timetable))
     max_time = sch.max_time
     tasks_added_so_far = []
+    
+    """
+    first, place the first job in the schedule, as it has no previous task, therefore does not have
+    specific constraint regarding how long it must be executed after the previous task
+    """
     
     current_task = job.list_tasks[0]
     start_time = random.randint(current_task.earliest_start_time,max_time-current_task.duration)
@@ -122,33 +153,8 @@ def generate_random_schedules(pop_size,job_list):
             
     return schedules
 
-
-def uniform_crossover(sch1,sch2):
-    """
-        Parameters
-        ----------
-        sch1 : Schedule
-            1st schedule
-        sch2 : Schedule
-            2nd schedule, having the same job list (and same tasks and machines etc) as schedule 1
-    
-        Returns a crossover schedule combining the 2 given ones
-        -------
-        This crossover function will select 'genes' pseudo uniformly randomly between the 2
-        given schedules.
-        'pseudo' means that whenever it's not possible to fit one gene into the new schedule for constraint
-        reasons, the gene from the other given will be selected from the other given schedule. We will
-        keep track of which schedule has participated more to the offspring to consequently calibrate
-        the choice probabilities, therefore artificially keeping the participation of each gene to the 
-        offspring close to 50%.
-    """
-    
-    job_list = sch1.job_list
-    offspring = sc.Schedule([],job_list,[])
-    # number of genes allocated to the offspring coming from schedule1 and schedule2
-    balance_genes = (0,0)
-    # probability to select a gene from schedule 1
-    prob = 0.5
+        
+        
     
     
     
