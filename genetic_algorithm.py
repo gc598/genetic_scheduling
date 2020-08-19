@@ -81,5 +81,18 @@ def uniform_crossover(sch1,sch2):
         
         #prob = (balance_genes[0]+0.0) / (balance_genes[0]+balance_genes[1])
     return offspring
+
+def mutation(sch,p,n):
+    """
+    This function will carry out a mutation on a gene, ie a schedule.
+    It will select n jobs from the schedule, and change their starting and end times randomly, (also 
+    updating the affected analysts and machine's timetables'), with probability p.
+    The new starting and end times will be random.
+    """
+    mutant = sch.copy_schedule()
+    i=0
+    while i<n:
+        for job in sch.list_jobs:
+            i
                 
             

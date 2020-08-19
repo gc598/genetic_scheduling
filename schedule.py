@@ -219,6 +219,16 @@ class Schedule:
     def print_schedule(self):
         for task in self.timetable:
             task.print_task()
+      
+    """
+    TODO ???
+    """    
+    def copy_schedule(self):
+        copied_schedule = Schedule([],[],[])
+        copied_schedule.max_time = self.max_time
+        copied_schedule.min_time = self.min_time
+        for job in self.job_list:
+            pass
             
             
         
