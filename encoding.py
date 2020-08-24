@@ -4,6 +4,14 @@ Created on Tue Jul 28 09:53:00 2020
 
 @author: Gabriel
 """
+
+"""
+File mostly dedicated to functions 'encoding' schedules into genomes. This means that we will make them
+usable by a genetic algorithm, whil repecting the constraints, and the dual resource nature of this 
+scheduling problem.
+"""
+
+
 import schedule as sc
 import copy
 import random
@@ -124,7 +132,6 @@ def randomly_place_job_timetable(job,sch):
         flag = 0
         if current_task not in sch.timetable:
             flag=place_task_timetable(sch,current_task)
-        tasks_added_so_far.append(current_task)
         #if it's not possible to fit this job in the schedule, we restart the function
         if(current_task.end_time > max_time or flag==-1):
             remove_job_from_timetable(sch,job)

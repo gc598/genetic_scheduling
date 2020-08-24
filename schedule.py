@@ -5,7 +5,16 @@ Created on Tue Jul 28 16:07:51 2020
 @author: Gabriel
 """
 
+"""
+This file contains all the necessary objects to deal with the genetic selection of schedules, with 
+dual resource (machines and analysts) and constraints that will be coded in the creation of the schedules.
+A schedule will contain jobs (sample test), themselves composed of different tasks (every action needed
+to carry out a sample test).
+Machines and analysts are also represented as objects.
+"""
+
 import numpy as np
+import copy
 
 #the value v at index i indicates that there are v machines of type i
 number_machines = [2,3,1,5]
@@ -118,7 +127,7 @@ class Task:
     
 class Job:
     
-    def __init__(self,list_tasks = [],due_date = 160):
+    def __init__(self,list_tasks = [],due_date = 160,job_id=0):
         """
 
         Parameters
@@ -142,6 +151,7 @@ class Job:
         self.max_separation_durations.append(-1)
         for j in range(len(self.list_tasks)-1):
             self.max_separation_durations.append(10)
+        self.job_id = job_id
             
     def copy_job(self):
         copied_job = Job([],self.due_date)
@@ -149,6 +159,7 @@ class Job:
         copied_job.list_tasks = []
         for task in self.list_tasks:
             copied_job.list_tasks.append(task.copy_task())
+            copied_job.job_id = self.job_id
         return copied_job
     
     def print_job(self):
@@ -220,15 +231,28 @@ class Schedule:
         for task in self.timetable:
             task.print_task()
       
-    """
-    TODO ???
-    """    
-    def copy_schedule(self):
-        copied_schedule = Schedule([],[],[])
-        copied_schedule.max_time = self.max_time
-        copied_schedule.min_time = self.min_time
+        
+    def search_job_by_id(self,job_id):
+        """
+        assumes that the jobs of job_list of ordered by job_id
+        """
+        return self.job_list[job_id]
+    
+    def fitness_val(self):
+        """
+        we will evaluate the fitness of a schedule (ie a chromosome) by considerring the number of
+        late jobs in it, which we want to minimise.
+        Note that this means that having a few very late jobs is considered less harmful than having 
+        many slightly overdue jobs, as most deadlines are hard.
+        """
+        
+        fit = 0
         for job in self.job_list:
-            pass
+            # if the job's due date is lower than the end time of the mast task in the job, add 1 to fit
+            if job.due_date < job.list_tasks[-1].end_time:
+                fit += 1
+        return fit
+        
             
             
         
