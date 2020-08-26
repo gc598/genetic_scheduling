@@ -167,6 +167,8 @@ def best_schedule_index(schedules):
     return current_best_index
 
 
+# infinite loop when there are too many 0 proability schedules, which is the case for small (non realistic)
+#test cases
 def roulette_wheel_selection(p_selection,schedules):
     
     """
@@ -177,7 +179,7 @@ def roulette_wheel_selection(p_selection,schedules):
     p_selection: proportion of chromosomes that will produce offsprings. Every selected schedule will 
         participate in creating 1/p_selection offspring to keep the total popoulation constant
     """
-    
+
     pop_size = len(schedules)
     
     #probabilities of selecting every chromosome 
@@ -187,13 +189,15 @@ def roulette_wheel_selection(p_selection,schedules):
     for i in range(pop_size):
         prob[i] = schedules[i].fitness_val()
         total_fitness += prob[i]
-    np.divide(prob,total_fitness+0.0)
+    prob=np.divide(prob,total_fitness+0.0)
+    print(prob)
     
     n_parents = int(pop_size*p_selection)
     parents = []
     
     i=0
     while i < n_parents:
+        print("length parents",len(parents))
         part_sum = 0
         index = 0
         p = np.random.rand()
@@ -202,6 +206,7 @@ def roulette_wheel_selection(p_selection,schedules):
             part_sum += prob[index]
             index +=1
         if schedules[index] not in parents:
+            print("not in parents")
             parents.append(schedules[index])
             i +=1
     return parents
@@ -225,13 +230,16 @@ def elitist_selection(p_selection,schedules):
     fitness_selection = np.arange(pop_size)
     for i in range(pop_size):
         fitness_selection[i] = schedules[i].fitness_val()
-    #sort indices contains the indices of the best schedules
+    #sort indices contains the indices of the best schedules in ascending order (worst to best)
     sort_indices = np.argsort(fitness_selection)
+    
+    print(fitness_selection)
     
     parents = []
     for i in range(n_parents):
-        parents.append(schedules[sort_indices[i]])
+        parents.append(schedules[sort_indices[pop_size-1-i]])
     return parents
+
 
 
 def tournament_selection(p_selection,n_tournament,schedules):
@@ -249,21 +257,37 @@ def tournament_selection(p_selection,n_tournament,schedules):
     # tournament will contain the schedules of each tournament
     parents = []
     
+    
     for i in range(n_parents):
-        tournament = [None]*n_tournament
+        tournament = []
         # indices contains random indices from which to select the schedules for the tournament
-        indices = np.random.shuffle(np.arange(pop_size))
+        indices = np.arange(pop_size)
+        np.random.shuffle(indices)
         for j in range(n_tournament):
-            tournament[j] = schedules[indices[j]]
+            tournament.append(schedules[indices[j]])
         # we find the index of the best schedule from the tournament
         best_index_from_tournament = best_schedule_index(tournament)
         # we add the best schedule from the tournament to the list of future offspring producers
-        parents.add(tournament[best_index_from_tournament])
+        if tournament[best_index_from_tournament] not in parents:
+            parents.append(tournament[best_index_from_tournament])
     
+    # if the number of selected shedules is less than n_parents, fill the rest randomly
+    if len(parents) < n_parents:
+        rest_to_add = n_parents-len(parents)
+        for sch in parents:
+            schedules.remove(sch)
+        np.random.shuffle(schedules)
+        for i in range(rest_to_add):
+            parents.append(schedules[i])
+            
     return parents
+
+def genetic_algorithm(pop_size):
+    return None       
         
+    
 
-
-
-
-
+    
+    
+    
+    

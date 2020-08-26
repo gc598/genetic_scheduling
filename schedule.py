@@ -241,7 +241,7 @@ class Schedule:
     def fitness_val(self):
         """
         we will evaluate the fitness of a schedule (ie a chromosome) by considerring the number of
-        late jobs in it, which we want to minimise.
+        not late jobs in it, which we want to maximise.
         Note that this means that having a few very late jobs is considered less harmful than having 
         many slightly overdue jobs, as most deadlines are hard.
         """
@@ -249,7 +249,7 @@ class Schedule:
         fit = 0
         for job in self.job_list:
             # if the job's due date is lower than the end time of the mast task in the job, add 1 to fit
-            if job.due_date < job.list_tasks[-1].end_time:
+            if job.due_date > job.list_tasks[-1].end_time:
                 fit += 1
         return fit
         
