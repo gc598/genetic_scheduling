@@ -252,6 +252,38 @@ class Schedule:
             if job.due_date > job.list_tasks[-1].end_time:
                 fit += 1
         return fit
+    
+    def order_by_start_time(self):
+        
+        """
+        orders tasks in the schedule's timetable by their starting times. This is the 
+        default organisation of a schedule.
+        """
+        start_times = []
+        for task in self.timetable:
+            start_times.append(task.start_time)
+        sort_indices = np.argsort(start_times)
+        tmp = copy.copy(self.timetable)
+        for i in range(len(self.timetable)):
+            self.timetable[i] = tmp[sort_indices[i]]
+            
+    def sort_job_list(self):
+        
+        """
+        orders the job_list variable by ascending order of job id. This is the default organisation
+        of job lists in schedules
+        """
+        
+        job_ids = []
+        for job in self.job_list:
+            job_ids.append(job.job_id)
+        sort_indices = np.argsort(job_ids)
+        tmp = copy.copy(self.job_id)
+        for i in range(len(self.job_list)):
+            self.job_list[i] = tmp[sort_indices[i]]
+    
+        
+        
         
             
             
