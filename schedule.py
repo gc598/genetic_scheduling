@@ -262,8 +262,10 @@ class Schedule:
         start_times = []
         for task in self.timetable:
             start_times.append(task.start_time)
+            
         sort_indices = np.argsort(start_times)
         tmp = copy.copy(self.timetable)
+        
         for i in range(len(self.timetable)):
             self.timetable[i] = tmp[sort_indices[i]]
             
@@ -277,8 +279,10 @@ class Schedule:
         job_ids = []
         for job in self.job_list:
             job_ids.append(job.job_id)
+            
         sort_indices = np.argsort(job_ids)
         tmp = copy.copy(self.job_id)
+        
         for i in range(len(self.job_list)):
             self.job_list[i] = tmp[sort_indices[i]]
     

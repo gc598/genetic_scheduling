@@ -94,6 +94,7 @@ def place_job_timetable(sch,job):
             remove_job_from_timetable(sch,job)
             print("impossible: abort")    
             return False
+    sch.order_by_start_time()
     return True
     
 
@@ -137,6 +138,7 @@ def randomly_place_job_timetable(job,sch):
             remove_job_from_timetable(sch,job)
             print("impossible: restart")    
             randomly_place_job_timetable(job,sch)
+    sch.order_by_start_time()
                   
             
         
