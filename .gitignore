@@ -1,4 +1,5 @@
 *.pyc
+scheduleInputObjectsGabriel.sql
 __pycache__
 MANIFEST
 build
