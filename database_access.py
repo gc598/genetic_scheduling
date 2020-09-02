@@ -187,9 +187,24 @@ def get_tasks(connection):
     finally:
         return data
 
-     
+def get_tests(connection):
+    """
+    returns all tests (all jobs) in a dataframe
+    """
     
-connection = sqlalchemy_connection()
-data = pd.read_sql_query("select * from tSchedule",connection)
+    query = "select * from tTest"
+    data = None
+    try:
+        data = pd.read_sql_query(query, connection)  
+    except:
+        print(sys.exc_info()[0])
+    finally:
+        return data 
+     
+
+
+conn= sqlalchemy_connection()
+data = get_tests(conn)
+al_dates = data["AllowedStartDate"]
 
 

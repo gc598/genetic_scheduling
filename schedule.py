@@ -11,6 +11,8 @@ dual resource (machines and analysts) and constraints that will be coded in the 
 A schedule will contain jobs (sample test), themselves composed of different tasks (every action needed
 to carry out a sample test).
 Machines and analysts are also represented as objects.
+Time will be represented discretely as units of 6 minutes, 0 being the start of the week 
+(schedules will be computed every week)
 """
 
 import numpy as np

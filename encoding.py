@@ -15,6 +15,7 @@ scheduling problem.
 import schedule as sc
 import copy
 import random
+import database_process_layer as dpl
 
 """
 removes the given task from the given schedule.updates machines consequently
@@ -162,6 +163,61 @@ def generate_random_schedules(pop_size,job_list):
             
     return schedules
 
+##################################################################################################
+##################################################################################################
+"""
+This will be a set a functions to get jobs and tasks from actual data from the database.
+We will use queries from data_process_layer .
+"""
+##################################################################################################
+##################################################################################################
+
+def from_pandas_timestamp(tstamp,day_beginning_week):
+    """
+    
+
+    Parameters
+    ----------
+    tstamp : pandas Timestamp
+        timestamp to translate into a number in the time unit considered by this program
+    return a number corresponding to the time unit given in Schedule.py (units of 6 minutes starting 
+    at the beginning of the week).
+    Therefore in this unit 1H = 10
+    We consider that the weel 
+    """
+    
+    time = 24*10*(tstamp.day-day_beginning_week)
+    time += 10 * tstamp.hour
+    time += int(tstamp.minute/6)
+    return time
+
+
+def get_max_time(data):
+    """
+    data is a dataframe containing rows of the same week from tTest in the database
+    returns the max time as defined in the object Schedule, ie time after which 
+    the schedule stops counting.
+    It is defined as 24:00 of the last dueDate's day
+    """
+    
+    min_timeStamp = data["AllowedStartDate"].min()
+    max_timeStamp = data["DueDate"].max()
+    
+    delta = max_timeStamp-min_timeStamp
+    days = delta.components.days
+    hours = delta.components.hours
+    minutes = delta.components.minutes
+    
+    max_time = 24*10*days + 10*hours + int(minutes/6)
+    return max_time
+
+def get_jobs():
+    return
+    
+    
+    
+
+    
         
         
     
