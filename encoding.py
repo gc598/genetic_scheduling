@@ -15,7 +15,8 @@ scheduling problem.
 import schedule as sc
 import copy
 import random
-import database_process_layer as dpl
+import database_access as dba
+import pandas as pd
 
 """
 removes the given task from the given schedule.updates machines consequently
@@ -191,7 +192,25 @@ def from_pandas_timestamp(tstamp,day_beginning_week):
     time += int(tstamp.minute/6)
     return time
 
+def from_delta_time(delta):
+    days = delta.components.days
+    hours = delta.components.hours
+    minutes = delta.components.minutes
+    return 24*10*days + 10*hours + int(minutes/6)
 
+
+def get_zero_time(first_allowed_start_date_tstamp):
+    """
+    returns a timestamp corresponding to 0 in the programs unit
+    first_allowed_start_date_tstamp is a pandas timestamp representing the first
+    allowed start date
+
+    """
+    ts_min = first_allowed_start_date_tstamp
+    ts = pd.Timestamp(year=ts_min.year,month=ts_min.month,day=ts_min.day,
+                      hour=0,tz=ts_min.tz)
+    return ts
+    
 def get_max_time(data):
     """
     data is a dataframe containing rows of the same week from tTest in the database
@@ -204,15 +223,92 @@ def get_max_time(data):
     max_timeStamp = data["DueDate"].max()
     
     delta = max_timeStamp-min_timeStamp
-    days = delta.components.days
-    hours = delta.components.hours
-    minutes = delta.components.minutes
     
-    max_time = 24*10*days + 10*hours + int(minutes/6)
+    max_time = from_delta_time(delta)
     return max_time
 
-def get_jobs():
-    return
+def create_empty_schedule(week_n):
+    
+    """
+    
+    
+    """
+    
+    connection = dba.sqlalchemy_connection()
+    
+    """
+    We first create the array of jobs that will be returned. Only tests(jobs)
+    whose allowedStartDates belong to a certain week (week_n) will be added
+    """
+    data_tests = dba.get_tests_week(week_n)
+    first_allowed_start_date_tstamp = data_tests["AllowedStartDate"].min()
+    day_beginning_week = first_allowed_start_date_tstamp.dayofweek
+    
+    list_jobs = []
+    job_dict_id = {}
+    # jobs completely processedallows to keep track of which jobs are processed, 
+    # meaning all machines and analysts etc. a=have been added to them
+    jobs_completely_processed = {}
+    for i in data_tests.index:
+        dueDate_tstamp = data_tests.loc[i]["DueDate"]
+        zero_time = get_zero_time(first_allowed_start_date_tstamp)
+        dueDate = from_delta_time(dueDate_tstamp-zero_time)
+        job = sc.Job(list_tasks = [],due_date = dueDate,job_id=data_tests.loc[i]["ID"])
+        list_jobs.append(job)
+        job_dict_id.update({job.job_id:job})
+        jobs_completely_processed.update({job.job_id:False})
+    
+    """
+    We now get the usable machines for each job. In the database, each machine belongs
+    to a certain group.
+    We will construct a dictionary of equipments (machines) indexed by their group ids,
+    containing arrays of equipment ids (an array contains the equipment ids of all the 
+    machine of a given group)?
+    This dictionary will be used to construct machine objects corresponding to the usable
+    machines for the set of jobs that we are given.
+    """
+
+    # for each group id, machines_to_create contains a list of equipment_id
+    # corresponding to the machines we'll have to create
+    machines_to_create = {}
+    # equipments contains all tests of the corresponding week, with, for each test,
+    # every group of equipments and every equipment that can run it
+    equipments = dba.get_equipment(connection)        
+    # data_eq is equipments restricted to the corresponding week (week_n)
+    data_eq = equipments[equipments["TestID"].isin(data_tests["ID"])] 
+    for test_id in data_eq["TestID"].drop_duplicates():
+        data_current_test = data_eq[data_eq["TestID"]==test_id]       
+        gr_id = data_current_test["GroupID"].iloc[0]
+        if gr_id not in machines_to_create.keys():
+            machines_to_create.update({gr_id:[]})
+            for j in data_current_test["EquipmentID"].index:
+                eq_id = data_current_test["EquipmentID"].loc[j]         
+                machines_to_create[gr_id].append(eq_id)
+                
+    """
+    We now build the machines from the dictionary obtained at the last step.
+    machines is an array of array as described in schedule.Schedule.
+    """
+    
+    machines = []
+    i = 0
+    for gr_id in machines_to_create.keys():
+        machines.append([])
+        for e_id in machines_to_create[gr_id]:
+            new_machine = sc.Machine(timetable=None,mac_id=i,group_id=gr_id,eq_id=e_id)
+            machines[i].append(new_machine)
+        i += 1
+        
+    return (list_jobs,job_dict_id,machines)
+    
+jobs,d_jobs,machines = create_empty_schedule(25)
+shape = []
+for i in range(len(machines)):
+    shape.append(len(machines[i]))                
+    
+        
+        
+    
     
     
     

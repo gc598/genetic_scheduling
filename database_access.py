@@ -200,6 +200,27 @@ def get_tests(connection):
         print(sys.exc_info()[0])
     finally:
         return data 
+    
+def get_tests_week(week_n):
+    """
+    week: week number of the year
+    returns a dataframe of tests whose allowed start dates are all in week_n 
+    """
+    conn = sqlalchemy_connection()
+    test_data = get_tests(conn)
+    # list of pandas timestamps corrseponding to the allowedStartDates of the tests
+    allowed_start_dates = test_data["AllowedStartDate"]
+    # new dataframe where we'll insert the right values
+    test_data_week_n = pd.DataFrame(columns=test_data.columns)
+    
+    test_data["week"] = [val.week for val in test_data["AllowedStartDate"]]
+    test_data_week_n = test_data[test_data["week"]==week_n]
+    test_data = test_data.drop(labels=["week"],axis=1)   
+    test_data_week_n = test_data_week_n.drop(labels=["week"],axis=1)
+    
+    return test_data_week_n
+
+
      
 
 

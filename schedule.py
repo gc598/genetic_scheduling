@@ -25,7 +25,7 @@ analysts = range(15)
 
 
 class Machine:
-    def __init__(self,timetable=None,mac_id=0):
+    def __init__(self,timetable=None,mac_id=0,group_id=0,eq_id=0):
         """
         timetable: list of tuples indicating activity starting time, end time, and task being executed. 
                 any time not within the bounds of a tuple indicates an idle period
@@ -33,6 +33,16 @@ class Machine:
         """
         self.timetable = timetable
         self.mac_id = mac_id
+        
+        """
+        The following attributes are from the database organisation.
+        
+        group_id: id of the group to which the machine belongs
+        eq_id : (equipment id): id of this particular equipment
+        """
+        self.group_id = group_id
+        self.eq_id = eq_id
+        
     
     #returns true if the machine is idle during the given interval
     def is_idle_at_interval(self,start,end):
@@ -196,6 +206,13 @@ class Schedule:
         for i in range(8):
             self.analysts.append(Analyst([],i,"Joe"))
             
+        """
+        The following attributes are not fundamentals of the genetic algorithm, rather 
+        they are attributes from the database.
+        job_dict_id: dictionnary that maches every testID of the database to the 
+            corresponding job
+        """
+        self.job_dict_id = {}
         
     
     # returns the index of a machine of type i idle at time defined by the given interval if there is one
