@@ -107,27 +107,27 @@ class Analyst:
 
 class Task:
     
-    def __init__(self,earliest_start_time=0,duration=160,job_id=0,machine=0,analysts_ind=None):
+    def __init__(self,duration=160,job_id=0,machine=0,analysts_ind=None,task_name="name"):
         """
         earliest_start_date: eartliest time this task can start to be completed
         machine: integer indicating the machine that can run this task
         analysts: list of integer indices of analysts who have the required competences to run this task
         job_id: job to which the task belongs
         """
-        self.earliest_start_time=earliest_start_time
-        self.start_time = self.earliest_start_time
+        self.start_time = 0
         self.duration=duration
         self.end_time = self.start_time + self.duration
         self.mac_id = machine
         self.analysts_indices = analysts_ind
         self.job_id = job_id
+        self.task_name = task_name
         
     def print_task(self):
         tup = (self.start_time,self.end_time)
         print("task: ",str(self),str(tup),"on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
         
     def copy_task(self):
-        copied_task = Task(self.earliest_start_time,self.duration,self.job_id,self.mac_id
+        copied_task = Task(self.duration,self.job_id,self.mac_id
                            ,self.analysts_indices)
         copied_task.start_time = self.start_time
         copied_task.end_time = self.end_time
@@ -139,7 +139,7 @@ class Task:
     
 class Job:
     
-    def __init__(self,list_tasks = [],due_date = 160,job_id=0):
+    def __init__(self,list_tasks = [],earliest_start_date=0,due_date = 160,job_id=0):
         """
 
         Parameters
@@ -157,6 +157,7 @@ class Job:
         None.
 
         """
+        self.earliest_start_time = earliest_start_date
         self.due_date = due_date
         self.list_tasks = list_tasks
         self.max_separation_durations = []

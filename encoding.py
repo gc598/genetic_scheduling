@@ -17,6 +17,7 @@ import copy
 import random
 import database_access as dba
 import pandas as pd
+import math
 
 """
 removes the given task from the given schedule.updates machines consequently
@@ -118,7 +119,7 @@ def randomly_place_job_timetable(job,sch):
     """
     
     current_task = job.list_tasks[0]
-    start_time = random.randint(current_task.earliest_start_time,max_time-current_task.duration)
+    start_time = random.randint(job.earliest_start_time,max_time-current_task.duration)
     current_task.start_time = start_time
     current_task.end_time = current_task.start_time + current_task.duration
     if current_task not in sch.timetable:
@@ -229,8 +230,18 @@ def get_max_time(data):
 
 def create_empty_schedule(week_n):
     
-    """
     
+    
+    """
+    TODO:
+    
+    add analysts
+    add reviewers
+    add mac_id to tasks
+    add machines to jobs
+    
+    NOTE:
+    some NaN values in times for tasks may alter the number of tasks in the jobs
     
     """
     
@@ -298,14 +309,64 @@ def create_empty_schedule(week_n):
             new_machine = sc.Machine(timetable=None,mac_id=i,group_id=gr_id,eq_id=e_id)
             machines[i].append(new_machine)
         i += 1
+    
+    """
+    We now build the tasks of each test. To do it we make a dictionary of lists of 
+    tasks indexed by the corresmonding job ids
+    """
+    dict_tasks = {}
+    tasks = dba.get_tasks(connection)
+    data_tasks = tasks[tasks["ID"].isin(data_tests["ID"])]
+    for test_id in data_tasks["ID"].drop_duplicates():
+        data_current_test = data_tasks[data_tasks["ID"]==test_id]
+        # duration is expressed in hours in the database so need to multiply ot by 10
+        durations = data_current_test["Time"]
+        names = data_current_test["PhaseName"]
+        if len(names)==len(durations) and test_id not in dict_tasks.keys():
+            list_tasks = []
+            for i in range(len(durations)):
+                try:
+                    dur = math.ceil(durations.iloc[i]*10)
+                except ValueError as err:
+                    continue
+                name = names.iloc[i]
+                task = sc.Task(duration=dur,job_id=test_id,task_name=name)
+                list_tasks.append(task)
+            dict_tasks.update({test_id:list_tasks})
+            
+    """
+    We now build a dictionary of analysts indexed bu their test (job). These are the 
+    analysts that will potentially carry out the first 6 steps of the test.
+    The last step needs to be done by a reviewer.
+    """
+    dict_analysts = {}
+    # lists_analysts is the list of all analysts (userID) that are able to perform
+    # a phase (task) of the test
+    list_analysts= []
+    analysts = dba.get_analysts_tests(connection)
+    data_an = analysts[analysts["ID"].isin(data_tests["ID"])]
+    for test_id in data_an["ID"].drop_duplicates():
+        data_current_test = data_an[data_an["ID"]==test_id]
+        array_analysts_ids = data_current_test["UserID"].iloc[:].to_numpy().tolist()
+        dict_analysts.update({test_id:array_analysts_ids})
+        list_analysts += array_analysts_ids
+    #removes the duplicates of list_analysts
+    list_analysts = list(dict.fromkeys(list_analysts))
+    
+         
+            
+ 
+    
+            
+        
+        
         
     return (list_jobs,job_dict_id,machines)
     
+
+
 jobs,d_jobs,machines = create_empty_schedule(25)
-shape = []
-for i in range(len(machines)):
-    shape.append(len(machines[i]))                
-    
+
         
         
     
