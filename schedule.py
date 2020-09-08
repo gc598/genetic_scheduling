@@ -31,8 +31,8 @@ class Machine:
                 any time not within the bounds of a tuple indicates an idle period
         mac_id: id of the machine as defined by the indices of array number_machines
         """
-        self.timetable = timetable
-        self.mac_id = mac_id
+        self.timetable = timetable #
+        self.mac_id = mac_id #
         
         """
         The following attributes are from the database organisation.
@@ -40,8 +40,8 @@ class Machine:
         group_id: id of the group to which the machine belongs
         eq_id : (equipment id): id of this particular equipment
         """
-        self.group_id = group_id
-        self.eq_id = eq_id
+        self.group_id = group_id #
+        self.eq_id = eq_id #
         
     
     #returns true if the machine is idle during the given interval
@@ -64,7 +64,7 @@ class Machine:
 
 class Analyst:
     
-    def __init__(self,timetable=None,an_id=0,name = "G"):
+    def __init__(self,timetable=None,an_id=0,name = "G",user_id = 0):
         
 
         """
@@ -84,9 +84,16 @@ class Analyst:
         None.
 
         """
-        self.name = name
-        self.timetable = timetable
-        self.an_id= an_id
+        self.name = name #
+        self.timetable = timetable #
+        self.an_id= an_id #
+        
+        """
+        The following aattributes are from the database, they are not used to perform
+        the main genetic algorithm
+        """
+        
+        self.user_id = user_id #
         
     #returns true if the analyst is idle during the given interval
     def is_idle_at_interval(self,start,end):
@@ -114,13 +121,13 @@ class Task:
         analysts: list of integer indices of analysts who have the required competences to run this task
         job_id: job to which the task belongs
         """
-        self.start_time = 0
-        self.duration=duration
-        self.end_time = self.start_time + self.duration
-        self.mac_id = machine
+        self.start_time = 0 #
+        self.duration=duration #
+        self.end_time = self.start_time + self.duration #
+        self.mac_id = machine #
         self.analysts_indices = analysts_ind
-        self.job_id = job_id
-        self.task_name = task_name
+        self.job_id = job_id #
+        self.task_name = task_name #
         
     def print_task(self):
         tup = (self.start_time,self.end_time)
@@ -158,13 +165,13 @@ class Job:
 
         """
         self.earliest_start_time = earliest_start_date
-        self.due_date = due_date
-        self.list_tasks = list_tasks
+        self.due_date = due_date #
+        self.list_tasks = list_tasks #
         self.max_separation_durations = []
         self.max_separation_durations.append(-1)
-        for j in range(len(self.list_tasks)-1):
+        for j in range(len(list_tasks)-1):
             self.max_separation_durations.append(10)
-        self.job_id = job_id
+        self.job_id = job_id #
             
     def copy_job(self):
         copied_job = Job([],self.due_date)
@@ -177,14 +184,20 @@ class Job:
     
     def print_job(self):
         for task in self.list_tasks:
-            task.prtint_task()
+            task.print_task()
+            
+    def update_max_sep_durations(self):
+        self.max_separation_durations = []
+        self.max_separation_durations.append(-1)
+        for j in range(len(self.list_tasks)-1):
+            self.max_separation_durations.append(10)        
         
 
 
 
 class Schedule:
     
-    def __init__(self,timetable,job_list,analysts = None):
+    def __init__(self,timetable,job_list,analysts = None,machines=None):
         """
         the schedule's timetable will contain a list of Tasks, ordered by starting date
         machines is 2D array containing the machine objects for each type of machine
@@ -198,7 +211,7 @@ class Schedule:
         for job in job_list:
             self.job_list.append(job.copy_job())
         self.min_time = 0
-        self.max_time = 1000
+        self.max_time = 45*240
         self.machines = [[] for k in range(len(number_machines))]   
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
@@ -206,6 +219,11 @@ class Schedule:
         self.analysts = analysts
         for i in range(8):
             self.analysts.append(Analyst([],i,"Joe"))
+        
+        if analysts != None:
+            self.analysts = analysts
+        if machines != None:
+            self.machines= machines
             
         """
         The following attributes are not fundamentals of the genetic algorithm, rather 
@@ -222,6 +240,7 @@ class Schedule:
             return -1
         #for all machines of type i, check if one of them is idle
         for j in range(len(self.machines[i])):
+            print("machine: ",(i,j))
             if self.machines[i][j].is_idle_at_interval(start,end):
                 return j
         return -1

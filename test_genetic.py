@@ -12,6 +12,7 @@ import encoding
 import copy
 
 
+"""
 #sample test 1
 t3 = sc.Task(5,0,1,[1,3])
 t2 = sc.Task(15,0,1,[1,3])
@@ -41,12 +42,11 @@ sch2 = schedules[2]
 
 p_sel = 0.25
 n_tournament = 10
-print("  ")
-sched = ga.tournament_selection(p_sel, n_tournament, schedules)
-sched
-for s in sched:
-    print(s.fitness_val())
+"""
 
+###############################################################################
+week_n = 25
+job_list = encoding.create_empty_schedule(week_n)
 
 
 

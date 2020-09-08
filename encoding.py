@@ -235,10 +235,8 @@ def create_empty_schedule(week_n):
     """
     TODO:
     
-    add analysts
-    add reviewers
-    add mac_id to tasks
-    add machines to jobs
+    add reviewers to jobs, after integrating it to the main genetic algorithm
+
     
     NOTE:
     some NaN values in times for tasks may alter the number of tasks in the jobs
@@ -253,9 +251,8 @@ def create_empty_schedule(week_n):
     """
     data_tests = dba.get_tests_week(week_n)
     first_allowed_start_date_tstamp = data_tests["AllowedStartDate"].min()
-    day_beginning_week = first_allowed_start_date_tstamp.dayofweek
+
     
-    list_jobs = []
     job_dict_id = {}
     # jobs completely processedallows to keep track of which jobs are processed, 
     # meaning all machines and analysts etc. a=have been added to them
@@ -265,7 +262,6 @@ def create_empty_schedule(week_n):
         zero_time = get_zero_time(first_allowed_start_date_tstamp)
         dueDate = from_delta_time(dueDate_tstamp-zero_time)
         job = sc.Job(list_tasks = [],due_date = dueDate,job_id=data_tests.loc[i]["ID"])
-        list_jobs.append(job)
         job_dict_id.update({job.job_id:job})
         jobs_completely_processed.update({job.job_id:False})
     
@@ -287,9 +283,12 @@ def create_empty_schedule(week_n):
     equipments = dba.get_equipment(connection)        
     # data_eq is equipments restricted to the corresponding week (week_n)
     data_eq = equipments[equipments["TestID"].isin(data_tests["ID"])] 
+    # test_machine_id contains the usable group id for each test, indexed by test id
+    test_machine_id = {}
     for test_id in data_eq["TestID"].drop_duplicates():
         data_current_test = data_eq[data_eq["TestID"]==test_id]       
         gr_id = data_current_test["GroupID"].iloc[0]
+        test_machine_id.update({test_id:gr_id})
         if gr_id not in machines_to_create.keys():
             machines_to_create.update({gr_id:[]})
             for j in data_current_test["EquipmentID"].index:
@@ -301,10 +300,14 @@ def create_empty_schedule(week_n):
     machines is an array of array as described in schedule.Schedule.
     """
     
+    # dict_gr_id matches the group gr_id from the database to the id that will be used
+    # by the program (mac_id in schedule.Machine)
+    dict_gr_id = {}
     machines = []
     i = 0
     for gr_id in machines_to_create.keys():
         machines.append([])
+        dict_gr_id.update({gr_id:i})
         for e_id in machines_to_create[gr_id]:
             new_machine = sc.Machine(timetable=None,mac_id=i,group_id=gr_id,eq_id=e_id)
             machines[i].append(new_machine)
@@ -312,7 +315,7 @@ def create_empty_schedule(week_n):
     
     """
     We now build the tasks of each test. To do it we make a dictionary of lists of 
-    tasks indexed by the corresmonding job ids
+    tasks indexed by the corresponding job ids
     """
     dict_tasks = {}
     tasks = dba.get_tasks(connection)
@@ -335,37 +338,97 @@ def create_empty_schedule(week_n):
             dict_tasks.update({test_id:list_tasks})
             
     """
-    We now build a dictionary of analysts indexed bu their test (job). These are the 
+    We now build a dictionary of analysts indexed by their test (job). These are the 
     analysts that will potentially carry out the first 6 steps of the test.
     The last step needs to be done by a reviewer.
     """
     dict_analysts = {}
     # lists_analysts is the list of all analysts (userID) that are able to perform
     # a phase (task) of the test
-    list_analysts= []
+    list_analysts_id= []
     analysts = dba.get_analysts_tests(connection)
     data_an = analysts[analysts["ID"].isin(data_tests["ID"])]
     for test_id in data_an["ID"].drop_duplicates():
         data_current_test = data_an[data_an["ID"]==test_id]
         array_analysts_ids = data_current_test["UserID"].iloc[:].to_numpy().tolist()
         dict_analysts.update({test_id:array_analysts_ids})
-        list_analysts += array_analysts_ids
-    #removes the duplicates of list_analysts
-    list_analysts = list(dict.fromkeys(list_analysts))
+        list_analysts_id += array_analysts_ids
+    #removes the duplicates of list_analysts_id
+    list_analysts_id = list(dict.fromkeys(list_analysts_id))
     
-         
-            
- 
+    """
+    Build the actual analysts objects
+    """
+    # dict_user_id matches the indeices used by the database (user_id) to the indices
+    # used by the program, as in schedule.Task (analysts_indices)
+    dict_user_id = {}
+    analysts_obj = []
+    i = 0
+    for u_id in list_analysts_id:
+        dict_user_id.update({u_id:i})
+        new_analyst = sc.Analyst(name="Joe",timetable=[],an_id = i,user_id=u_id)
+        analysts_obj.append(new_analyst)
+        i += 1
+        
     
+    
+    """
+    We now build a dictionary of reviewers indexed by their test (job). These are the 
+    reviewers that will potentially carry out the last step of the test.
+    """       
+    dict_reviewers = {}
+    # lists_reviewers is the list of all reviewers (userID) that are able to perform
+    # a phase (task) of the test
+    list_reviewers= []
+    reviewers = dba.get_reviewers(connection)
+    data_rev = reviewers[reviewers["ID"].isin(data_tests["ID"])]
+    for test_id in data_an["ID"].drop_duplicates():
+        data_current_test = data_rev[data_rev["ID"]==test_id]
+        array_reviewers_ids = data_current_test["UserID"].iloc[:].to_numpy().tolist()
+        dict_reviewers.update({test_id:array_reviewers_ids})
+        list_reviewers += array_reviewers_ids
+    #removes the duplicates of list_reviewers
+    list_reviewers = list(dict.fromkeys(list_reviewers))
+
+    """
+    We now add the machine group ids to the tasks of the different jobs,
+    """
+    
+    for test_id in dict_tasks.keys():
+        for task in dict_tasks[test_id]:
+            task.mac_id = dict_gr_id[test_machine_id[test_id]]
             
-        
-        
-        
-    return (list_jobs,job_dict_id,machines)
+    """
+    We add the analysts to the tasks of the different jobs
+    """
+    
+    for test_id in dict_tasks.keys():
+        for task in dict_tasks[test_id]:
+            task.analysts_indices = []
+            for u_id in dict_analysts[test_id]:
+                task.analysts_indices.append(dict_user_id[u_id])
+                
+    """
+    Now add the tasks to the jobs
+    """
+    list_jobs = []
+    
+    for job_id in job_dict_id.keys():
+        if job_id in test_machine_id.keys() and job_id in dict_tasks.keys() and job_id in dict_analysts.keys() and job_id in dict_reviewers.keys():
+            job = job_dict_id[job_id]
+            job.list_tasks = dict_tasks[job_id]
+            job.update_max_sep_durations()
+            list_jobs.append(job)
+            jobs_completely_processed[job_id] = True
+            
+    
+    return list_jobs       
+    #return (list_jobs,job_dict_id,machines,dict_analysts,analysts_obj,dict_tasks,schedule)
+    
     
 
 
-jobs,d_jobs,machines = create_empty_schedule(25)
+#jobs,d_jobs,machines,analysts,analysts_obj,tasks,sch= create_empty_schedule(25)
 
         
         
