@@ -60,6 +60,15 @@ class Machine:
         for task in self.timetable:
             task.print_task()
             
+    def copy_essential_machine(self):
+        """
+        returns a copy of the current analyst, without its timetable (only the 
+        fundamental information)
+        """
+        new_machine = Machine(timetable=[],mac_id=self.mac_id,group_id=self.group_id,
+                              eq_id=self.eq_id)
+        return new_machine
+            
     
 
 class Analyst:
@@ -109,7 +118,19 @@ class Analyst:
  
     def print_analyst(self):
         for task in self.timetable:
-            task.print_task()       
+            task.print_task()
+            
+            
+    def copy_essential_analyst(self):
+        """
+        returns a copy of the current analyst, without its timetable (only the 
+        fundamental information)
+
+        """
+        
+        new_analyst = Analyst(timetable=[],an_id=self.an_id,name=self.name,
+                              user_id=self.user_id)
+        return new_analyst
         
 
 class Task:
@@ -212,7 +233,7 @@ class Schedule:
         for job in job_list:
             self.job_list.append(job.copy_job())
         self.min_time = 0
-        self.max_time = 45*240
+        self.max_time = 2400
         self.machines = [[] for k in range(len(number_machines))]   
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
@@ -244,6 +265,7 @@ class Schedule:
         if end<=start:
             return -1
         #for all machines of type i, check if one of them is idle
+        #print(self.machines,len(self.machines),"test")
         for j in range(len(self.machines[i])):
             #print("machine: ",(i,j),len(self.machines))
             if self.machines[i][j].is_idle_at_interval(start,end):
@@ -257,9 +279,9 @@ class Schedule:
         if end<=start:
             return -1
         for index in task.analysts_indices:
-            task.print_task()
-            print(index,len(self.analysts),task.job_id,self)
-            self.print_schedule()
+            #task.print_task()
+            #print(index,len(self.analysts),task.job_id,self)
+            #self.print_schedule()
             analyst = self.analysts[index]
             if analyst.is_idle_at_interval(start,end):
                 return index
@@ -332,6 +354,21 @@ class Schedule:
         
         for i in range(len(self.job_list)):
             self.job_list[i] = tmp[sort_indices[i]]
+            
+    def get_sorted_list_jobs(self):
+        """
+        returns the list of jobs sorted by their start dates (start dates of their
+        first tasks)
+
+        """
+        start_times = []
+        for job in self.job_list:
+            start_times.append(job.list_tasks[0].start_time)
+        sort_indices = np.argsort(start_times)
+        sorted_list = []
+        for i in sort_indices:
+            sorted_list.append(self.job_list[i])
+        return sorted_list
     
         
         

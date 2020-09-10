@@ -32,7 +32,7 @@ u1 = sc.Task(10,2,3,[2,3,7])
 job2 = sc.Job([copy.deepcopy(u1),copy.deepcopy(u2),copy.deepcopy(u3)],160,50,2)
 
 job_list = [copy.deepcopy(job0),copy.deepcopy(job1),copy.deepcopy(job2)]
-schedules_simple = encoding.generate_random_schedules(100, job_list)
+schedules_simple = encoding.generate_random_schedules(10, job_list)
 sch0 = schedules_simple[0]
 sch1 = schedules_simple[1]
 sch2 = schedules_simple[2]
@@ -47,7 +47,9 @@ n_tournament = 10
 ###############################################################################
 week_n = 25
 list_jobs,machines,analysts_obj  = encoding.create_empty_schedule(week_n)
-#schedules = encoding.random_schedules(1000, 25)
+schedules = encoding.random_schedules(10, 25)
+sc0 = schedules[0]
+sc1 = schedules[1]
 
 
 

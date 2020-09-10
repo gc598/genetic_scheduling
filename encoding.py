@@ -23,8 +23,8 @@ import math
 removes the given task from the given schedule.updates machines consequently
 """
 def remove_task_from_timetable(sch,task):
-    job = sch.job_list[sch.job_dict_id[task.job_id]]
-    print("removing job ",str(job))
+    #job = sch.job_list[sch.job_dict_id[task.job_id]]
+    #print("removing job ",str(job))
     try:
         sch.timetable.remove(task)
     except ValueError as err:
@@ -89,7 +89,8 @@ def place_job_timetable(sch,job):
     
     for i in range(0,len(job.list_tasks)):
         current_task = job.list_tasks[i]
-        start_time = current_task.start_time    
+        start_time = current_task.start_time 
+        #print(current_task,current_task.job_id,current_task.analysts_indices)
         if current_task not in sch.timetable:
             flag=place_task_timetable(sch,current_task)
         #if it's not possible to fit this job in the schedule, return false
@@ -441,11 +442,11 @@ def random_schedules(pop_size,week_n):
     sch = None
     schedules = []
     for i in range(pop_size):
+        print("generating schedule: ",i)
         sch = sc.Schedule(timetable=[],job_list=copy.deepcopy(list_jobs),
                           analysts=copy.deepcopy(analysts),
                           machines=copy.deepcopy(machines))
         list_start_dates = [(job.earliest_start_time,job.due_date) for job in sch.job_list]
-        print("schedule ",i,sch,list_start_dates)
         #we keep looping while all the jobs have not been scheduled
         for j in range(len(sch.job_list)):
             """
