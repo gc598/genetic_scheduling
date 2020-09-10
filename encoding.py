@@ -23,7 +23,7 @@ import math
 removes the given task from the given schedule.updates machines consequently
 """
 def remove_task_from_timetable(sch,task):
-    job = sch.job_list[task.job_id]
+    job = sch.job_list[sch.job_dict_id[task.job_id]]
     print("removing job ",str(job))
     try:
         sch.timetable.remove(task)
@@ -109,7 +109,7 @@ def randomly_place_job_timetable(job,sch):
     """
     if not job:
         return
-    print(len(sch.timetable))
+    #print(len(sch.timetable))
     max_time = sch.max_time
     tasks_added_so_far = []
     
@@ -151,7 +151,7 @@ def generate_random_schedules(pop_size,job_list):
     sch = None
     schedules = []
     for i in range(pop_size):
-        sch = sc.Schedule([],copy.deepcopy(job_list),[])
+        sch = sc.Schedule([],copy.deepcopy(job_list))
         print(sch)
         #we keep looping while all the jobs have not been scheduled
         for j in range(len(sch.job_list)):
@@ -197,7 +197,7 @@ def from_delta_time(delta):
     days = delta.components.days
     hours = delta.components.hours
     minutes = delta.components.minutes
-    return 24*10*days + 10*hours + int(minutes/6)
+    return 24*10*days + 10*hours + math.ceil(minutes/6)
 
 
 def get_zero_time(first_allowed_start_date_tstamp):
@@ -259,11 +259,15 @@ def create_empty_schedule(week_n):
     jobs_completely_processed = {}
     for i in data_tests.index:
         dueDate_tstamp = data_tests.loc[i]["DueDate"]
+        allowed_start_date = data_tests.loc[i]["AllowedStartDate"]
         zero_time = get_zero_time(first_allowed_start_date_tstamp)
         dueDate = from_delta_time(dueDate_tstamp-zero_time)
-        job = sc.Job(list_tasks = [],due_date = dueDate,job_id=data_tests.loc[i]["ID"])
+        earliest_start_date = from_delta_time(allowed_start_date-zero_time)
+        job = sc.Job(list_tasks = [],earliest_start_date=earliest_start_date,
+                     due_date = dueDate,job_id=data_tests.loc[i]["ID"])
         job_dict_id.update({job.job_id:job})
         jobs_completely_processed.update({job.job_id:False})
+        #print(job.earliest_start_time,job.due_date)
     
     """
     We now get the usable machines for each job. In the database, each machine belongs
@@ -309,7 +313,7 @@ def create_empty_schedule(week_n):
         machines.append([])
         dict_gr_id.update({gr_id:i})
         for e_id in machines_to_create[gr_id]:
-            new_machine = sc.Machine(timetable=None,mac_id=i,group_id=gr_id,eq_id=e_id)
+            new_machine = sc.Machine(timetable=[],mac_id=i,group_id=gr_id,eq_id=e_id)
             machines[i].append(new_machine)
         i += 1
     
@@ -419,16 +423,40 @@ def create_empty_schedule(week_n):
             job.list_tasks = dict_tasks[job_id]
             job.update_max_sep_durations()
             list_jobs.append(job)
+            job_dict_id.update({job_id:i})
             jobs_completely_processed[job_id] = True
             
+    #print([(job.earliest_start_time,job.due_date) for job in list_jobs])
     
-    return list_jobs       
+    return list_jobs,machines,analysts_obj       
     #return (list_jobs,job_dict_id,machines,dict_analysts,analysts_obj,dict_tasks,schedule)
     
     
 
 
 #jobs,d_jobs,machines,analysts,analysts_obj,tasks,sch= create_empty_schedule(25)
+    
+def random_schedules(pop_size,week_n):
+    list_jobs,machines,analysts = create_empty_schedule(week_n)
+    sch = None
+    schedules = []
+    for i in range(pop_size):
+        sch = sc.Schedule(timetable=[],job_list=copy.deepcopy(list_jobs),
+                          analysts=copy.deepcopy(analysts),
+                          machines=copy.deepcopy(machines))
+        list_start_dates = [(job.earliest_start_time,job.due_date) for job in sch.job_list]
+        print("schedule ",i,sch,list_start_dates)
+        #we keep looping while all the jobs have not been scheduled
+        for j in range(len(sch.job_list)):
+            """
+            given the fact that operations in a job must be carried out within 1H of one another, we'll
+            process them jointly
+            """
+            job = sch.job_list[j]
+            randomly_place_job_timetable(job,sch)
+        schedules.append(sch)
+            
+    return schedules
 
         
         

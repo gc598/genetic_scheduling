@@ -37,7 +37,7 @@ def uniform_crossover(sch1,sch2):
         offspring close to 50%.
     """
     
-    offspring = sc.Schedule([],[],[])
+    offspring = sc.Schedule(timetable=[],job_list=[],analysts=[],machines=[])
     # number of genes allocated to the offspring coming from schedule1 and schedule2
     balance_genes = [0,0]
     # probability to select a gene from schedule 1
@@ -45,8 +45,8 @@ def uniform_crossover(sch1,sch2):
     
     for i in range(len(sch1.job_list)):
         #print("iteration",str(i))
-        job1 = sch1.job_list[i].copy_job()
-        job2 = sch2.job_list[i].copy_job()
+        job1 = copy.deepcopy(sch1.job_list[i])
+        job2 = copy.deepcopy(sch2.job_list[i])
         
         """
         for j in range(len(job1.list_tasks)):

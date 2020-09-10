@@ -52,7 +52,7 @@ class Machine:
             start_active = task.start_time
             end_active = task.end_time
             if (start>start_active and start < end_active) or (end > start_active and end < end_active):
-                print("in fct is_idle_mac",str(start),str(end),str(start_active),str(end_active))
+                #print("in fct is_idle_mac",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True   
     
@@ -103,7 +103,7 @@ class Analyst:
             start_active = task.start_time
             end_active = task.end_time
             if (start>start_active and start < end_active) or (end > start_active and end < end_active):
-                print("in fct is_idle_an",str(start),str(end),str(start_active),str(end_active))
+                #print("in fct is_idle_an",str(start),str(end),str(start_active),str(end_active))
                 return False
         return True  
  
@@ -174,7 +174,8 @@ class Job:
         self.job_id = job_id #
             
     def copy_job(self):
-        copied_job = Job([],self.due_date)
+        copied_job = Job(list_tasks=[],earliest_start_date=self.earliest_start_time,
+                         due_date=self.due_date)
         copied_job.max_separation_durations = self.max_separation_durations
         copied_job.list_tasks = []
         for task in self.list_tasks:
@@ -216,7 +217,7 @@ class Schedule:
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
                 self.machines[i].append(Machine([],i))    
-        self.analysts = analysts
+        self.analysts = []
         for i in range(8):
             self.analysts.append(Analyst([],i,"Joe"))
         
@@ -229,9 +230,13 @@ class Schedule:
         The following attributes are not fundamentals of the genetic algorithm, rather 
         they are attributes from the database.
         job_dict_id: dictionnary that maches every testID of the database to the 
-            corresponding job
+            corresponding job index in self.job_list
         """
         self.job_dict_id = {}
+        i=0
+        for job in self.job_list:
+            self.job_dict_id.update({job.job_id:i})
+            i+=1
         
     
     # returns the index of a machine of type i idle at time defined by the given interval if there is one
@@ -240,7 +245,7 @@ class Schedule:
             return -1
         #for all machines of type i, check if one of them is idle
         for j in range(len(self.machines[i])):
-            print("machine: ",(i,j))
+            #print("machine: ",(i,j),len(self.machines))
             if self.machines[i][j].is_idle_at_interval(start,end):
                 return j
         return -1
@@ -252,6 +257,9 @@ class Schedule:
         if end<=start:
             return -1
         for index in task.analysts_indices:
+            task.print_task()
+            print(index,len(self.analysts),task.job_id,self)
+            self.print_schedule()
             analyst = self.analysts[index]
             if analyst.is_idle_at_interval(start,end):
                 return index

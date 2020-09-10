@@ -12,7 +12,7 @@ import encoding
 import copy
 
 
-"""
+
 #sample test 1
 t3 = sc.Task(5,0,1,[1,3])
 t2 = sc.Task(15,0,1,[1,3])
@@ -32,22 +32,22 @@ u1 = sc.Task(10,2,3,[2,3,7])
 job2 = sc.Job([copy.deepcopy(u1),copy.deepcopy(u2),copy.deepcopy(u3)],160,50,2)
 
 job_list = [copy.deepcopy(job0),copy.deepcopy(job1),copy.deepcopy(job2)]
-schedules = encoding.generate_random_schedules(100, job_list)
-sch0 = schedules[0]
-sch1 = schedules[1]
-sch2 = schedules[2]
+schedules_simple = encoding.generate_random_schedules(100, job_list)
+sch0 = schedules_simple[0]
+sch1 = schedules_simple[1]
+sch2 = schedules_simple[2]
 
 #off = ga.uniform_crossover(sch0,sch1)
 #mutant = ga.mutation(sch0,0.8,1)
 
 p_sel = 0.25
 n_tournament = 10
-"""
+
 
 ###############################################################################
 week_n = 25
-job_list = encoding.create_empty_schedule(week_n)
-
+list_jobs,machines,analysts_obj  = encoding.create_empty_schedule(week_n)
+#schedules = encoding.random_schedules(1000, 25)
 
 
 
