@@ -55,10 +55,12 @@ def uniform_crossover(sch1,sch2):
     # probability to select a gene from schedule 1
     prob = 0.5
     
-    for i in range(len(sch1.job_list)):
-        #print("iteration",str(i))
-        job1 = copy.deepcopy(sch1.job_list[i])
-        job2 = copy.deepcopy(sch2.job_list[i])
+    sorted_jobs1 = sch1.get_sorted_list_jobs()
+    sorted_jobs2 = sch2.get_sorted_list_jobs()
+    
+    for i in range(len(sorted_jobs1)):
+        job1 = copy.deepcopy(sorted_jobs1[i])
+        job2 = copy.deepcopy(sorted_jobs2[i])
         
         """
         for j in range(len(job1.list_tasks)):
@@ -100,9 +102,237 @@ def uniform_crossover(sch1,sch2):
             offspring.job_list.append(job2.copy_job())
         
         #prob = (balance_genes[0]+0.0) / (balance_genes[0]+balance_genes[1])
+            offspring.update_dictionary()
     return offspring
 
+# version with sorted jobs by start time
+def pseudo_crossover_sorted(sch1,sch2):
+    
+    if len(sch1.timetable) != len(sch2.timetable):
+        return None
+    
+    offspring = sc.Schedule(timetable=[],job_list=[],analysts=[],machines=[])
+    offspring.max_time = max(sch1.max_time,sch2.max_time)
+    offspring.min_time = min(sch1.min_time,sch2.min_time)
+    for analyst in sch1.analysts:
+        offspring.analysts.append(analyst.copy_essential_analyst())
+    for mac_id in range(len(sch1.machines)):
+        offspring.machines.append([])
+        for machine in sch1.machines[mac_id]:
+            offspring.machines[mac_id].append(machine.copy_essential_machine())
+    offspring.job_dict_id = sch1.job_dict_id 
+    
+    # job_ids_placed contains the job_id of the jobs that could
+    # be placed in the timetable
+    job_ids_placed = []
+    # count_placed counts the number of jobs put into the timetable
+    count_placed = 0
+    
+    jobs1 = sch1.job_list
+    jobs2 = sch2.job_list
+    
+    sorted_jobs1 = copy.deepcopy(sch1.get_sorted_list_jobs())
+    sorted_jobs2 = copy.deepcopy(sch2.get_sorted_list_jobs())
+    
+    prob = 0.5
+    
+    
+    for i in range(len(sorted_jobs1)):
+        p = random.uniform(0,1)
+        flag = False
+        
+        job1 = copy.deepcopy(sorted_jobs1[i])
+        job2 = copy.deepcopy(sorted_jobs2[i])
+        
+        if p < prob:
+            if job1.job_id not in job_ids_placed:
+                flag = en.place_job_timetable(offspring,job1)
+            if flag:
+                job_ids_placed.append(job1.job_id)
+                offspring.job_list.append(job1)
+            else:
+                if job2.job_id not in job_ids_placed:
+                    flag = en.place_job_timetable(offspring,job2)
+                if flag:
+                    job_ids_placed.append(job2.job_id)
+                    offspring.job_list.append(job2)
+        else:
+            if job2.job_id not in job_ids_placed:
+                flag = en.place_job_timetable(offspring,job2)
+            if flag:
+                job_ids_placed.append(job2.job_id)
+                offspring.job_list.append(job2)
+            else:
+                if job1.job_id not in job_ids_placed:    
+                    flag = en.place_job_timetable(offspring,job1)
+                if flag:
+                    job_ids_placed.append(job1.job_id)
+                    offspring.job_list.append(job1)
+        if flag:
+            count_placed +=1
+        
+    
+    
+    for job in sorted_jobs1:
+        if job.job_id not in job_ids_placed:
+            job = copy.deepcopy(job)
+            en.randomly_place_job_timetable(job, offspring)
+            offspring.job_list.append(job)
+            
+    print((count_placed/len(sch1.job_list))*100,"%")
+    print(job_ids_placed)
+    return offspring
+    
+# normal version
+def pseudo_crossover_normal(sch1,sch2):
+    
+    if len(sch1.timetable) != len(sch2.timetable):
+        return None
+    
+    offspring = sc.Schedule(timetable=[],job_list=[],analysts=[],machines=[])
+    offspring.max_time = max(sch1.max_time,sch2.max_time)
+    offspring.min_time = min(sch1.min_time,sch2.min_time)
+    for analyst in sch1.analysts:
+        offspring.analysts.append(analyst.copy_essential_analyst())
+    for mac_id in range(len(sch1.machines)):
+        offspring.machines.append([])
+        for machine in sch1.machines[mac_id]:
+            offspring.machines[mac_id].append(machine.copy_essential_machine())
+    offspring.job_dict_id = sch1.job_dict_id 
+    
+    # job_ids_placed contains the job_id of the jobs that could
+    # be placed in the timetable
+    job_ids_placed = []
+    # count_placed counts the number of jobs put into the timetable
+    count_placed = 0
+    
+    jobs1 = sch1.job_list
+    jobs2 = sch2.job_list
+    
+    sorted_jobs1 = copy.deepcopy(sch1.get_sorted_list_jobs())
+    sorted_jobs2 = copy.deepcopy(sch2.get_sorted_list_jobs())
+    
+    prob = 0.5
+    
+    
+    for i in range(len(jobs1)):
+        p = random.uniform(0,1)
+        flag = False
+        
+        job1 = copy.deepcopy(jobs1[i])
+        job2 = copy.deepcopy(jobs2[i])
+        
+        if p < prob:
+            flag = en.place_job_timetable(offspring,job1)
+            if flag:
+                job_ids_placed.append(job1.job_id)
+                offspring.job_list.append(job1)
+            else:
+                flag = en.place_job_timetable(offspring,job2)
+                if flag:
+                    job_ids_placed.append(job2.job_id)
+                    offspring.job_list.append(job2)
+        else:
+            flag = en.place_job_timetable(offspring,job2)
+            if flag:
+                job_ids_placed.append(job2.job_id)
+                offspring.job_list.append(job2)
+            else:
+                flag = en.place_job_timetable(offspring,job1)
+                if flag:
+                    job_ids_placed.append(job1.job_id)
+                    offspring.job_list.append(job1)
+        if flag:
+            count_placed +=1
+        
+    
+    
+    for job in jobs1:
+        if job.job_id not in job_ids_placed:
+            job = copy.deepcopy(job)
+            en.randomly_place_job_timetable(job, offspring)
+            offspring.job_list.append(job)
+            
+    print((count_placed/len(sch1.job_list))*100,"%")
+    print(job_ids_placed)
+    return offspring 
 
+# version that uses randomly rearranged lists of jobs
+def pseudo_crossover(sch1,sch2):
+    
+    if len(sch1.timetable) != len(sch2.timetable):
+        return None
+    
+    offspring = sc.Schedule(timetable=[],job_list=[],analysts=[],machines=[])
+    offspring.max_time = max(sch1.max_time,sch2.max_time)
+    offspring.min_time = min(sch1.min_time,sch2.min_time)
+    for analyst in sch1.analysts:
+        offspring.analysts.append(analyst.copy_essential_analyst())
+    for mac_id in range(len(sch1.machines)):
+        offspring.machines.append([])
+        for machine in sch1.machines[mac_id]:
+            offspring.machines[mac_id].append(machine.copy_essential_machine())
+    offspring.job_dict_id = sch1.job_dict_id 
+    
+    # job_ids_placed contains the job_id of the jobs that could
+    # be placed in the timetable
+    job_ids_placed = []
+    # count_placed counts the number of jobs put into the timetable
+    count_placed = 0
+    
+    indices = np.arange(len(sch1.job_list))
+    np.random.shuffle(indices)
+    
+    jobs1 = [sch1.job_list[i] for i in indices]
+    jobs2 = [sch2.job_list[i] for i in indices]
+    
+    
+    prob = 0.5
+    
+    
+    for i in range(len(jobs1)):
+        p = random.uniform(0,1)
+        flag = False
+        
+        job1 = copy.deepcopy(jobs1[i])
+        job2 = copy.deepcopy(jobs2[i])
+        
+        if p < prob:
+            flag = en.place_job_timetable(offspring,job1)
+            if flag:
+                job_ids_placed.append(job1.job_id)
+                offspring.job_list.append(job1)
+            else:
+                flag = en.place_job_timetable(offspring,job2)
+                if flag:
+                    job_ids_placed.append(job2.job_id)
+                    offspring.job_list.append(job2)
+        else:
+            flag = en.place_job_timetable(offspring,job2)
+            if flag:
+                job_ids_placed.append(job2.job_id)
+                offspring.job_list.append(job2)
+            else:
+                flag = en.place_job_timetable(offspring,job1)
+                if flag:
+                    job_ids_placed.append(job1.job_id)
+                    offspring.job_list.append(job1)
+        if flag:
+            count_placed +=1
+        
+    
+    
+    for job in jobs1:
+        if job.job_id not in job_ids_placed:
+            job = copy.deepcopy(job)
+            en.randomly_place_job_timetable(job, offspring)
+            offspring.job_list.append(job)
+            
+    print((count_placed/len(sch1.job_list))*100,"%")
+    print(job_ids_placed)
+    return offspring               
+                
+        
 def mutation(sch,p,n):
     """
     This function will carry out a mutation on a gene, ie a schedule.

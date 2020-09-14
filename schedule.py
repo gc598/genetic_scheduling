@@ -370,6 +370,12 @@ class Schedule:
             sorted_list.append(self.job_list[i])
         return sorted_list
     
+    def update_dictionary(self):
+        self.job_dict_id = {}
+        i=0
+        for job in self.job_list:
+            self.job_dict_id.update({job.job_id:i})
+            i+=1        
         
         
         
