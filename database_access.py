@@ -221,11 +221,35 @@ def get_tests_week(week_n):
     return test_data_week_n
 
 
+def get_shift_users(connection):
+    
+    """
+    Parameters
+    ----------
+    connection : sql alchemy connection
+    returns a pandas dataframe containing the shift hours and the associated 
+    analysts and reviewers (users).
+    """
+    
+    query = """
+            select * 
+            from tShift,tShiftHours
+            where tShiftHours.ID = tShift.ShiftHoursID
+            """
+    
+    data = None
+    try:
+        data = pd.read_sql_query(query, connection)  
+    except:
+        print(sys.exc_info()[0])
+    finally:
+        return data
+
      
 
 
 conn= sqlalchemy_connection()
-data = get_tests(conn)
-al_dates = data["AllowedStartDate"]
+data = get_shift_users(conn)
+
 
 

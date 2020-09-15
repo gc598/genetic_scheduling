@@ -233,7 +233,7 @@ class Schedule:
         for job in job_list:
             self.job_list.append(job.copy_job())
         self.min_time = 0
-        self.max_time = 2400
+        self.max_time = 240*31
         self.machines = [[] for k in range(len(number_machines))]   
         for i in range(len(number_machines)):
             for j in range(number_machines[i]):
@@ -375,8 +375,14 @@ class Schedule:
         i=0
         for job in self.job_list:
             self.job_dict_id.update({job.job_id:i})
-            i+=1        
-        
+            i+=1   
+            
+    def total_fit_schedules(schedules):
+        """
+        computes the average fitness value of a list of schedules
+        """
+        fit_vals = np.array([sch.fitness_val() for sch in schedules])
+        return np.average(fit_vals)
         
         
             

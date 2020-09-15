@@ -10,6 +10,7 @@ import genetic_algorithm as ga
 import schedule as sc
 import encoding
 import copy
+import numpy as np
 
 
 
@@ -46,10 +47,17 @@ n_tournament = 10
 
 ###############################################################################
 week_n = 25
+
+"""
 list_jobs,machines,analysts_obj  = encoding.create_empty_schedule(week_n)
-schedules = encoding.random_schedules(10, 25)
+schedules = encoding.random_schedules(100, 25)
 sc0 = schedules[0]
 sc1 = schedules[1]
+"""
+
+pop_size = 100
+offsprings = ga.genetic_algorithm(pop_size, week_n,100)
+
 
 
 

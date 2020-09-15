@@ -328,8 +328,8 @@ def pseudo_crossover(sch1,sch2):
             en.randomly_place_job_timetable(job, offspring)
             offspring.job_list.append(job)
             
-    print((count_placed/len(sch1.job_list))*100,"%")
-    print(job_ids_placed)
+    #print((count_placed/len(sch1.job_list))*100,"%")
+    #print(job_ids_placed)
     return offspring               
                 
         
@@ -424,7 +424,7 @@ def roulette_wheel_selection(p_selection,schedules):
 
     pop_size = len(schedules)
     
-    #probabilities of selecting every chromosome 
+    # probabilities of selecting every chromosome 
     prob = np.zeros(pop_size)
     
     total_fitness = 0
@@ -432,14 +432,14 @@ def roulette_wheel_selection(p_selection,schedules):
         prob[i] = schedules[i].fitness_val()
         total_fitness += prob[i]
     prob=np.divide(prob,total_fitness+0.0)
-    print(prob)
+    #print(prob,prob.sum())
     
     n_parents = int(pop_size*p_selection)
     parents = []
     
     i=0
     while i < n_parents:
-        print("length parents",len(parents))
+        #print("length parents",len(parents))
         part_sum = 0
         index = 0
         p = np.random.rand()
@@ -447,10 +447,14 @@ def roulette_wheel_selection(p_selection,schedules):
         while part_sum < p:
             part_sum += prob[index]
             index +=1
-        if schedules[index] not in parents:
-            print("not in parents")
-            parents.append(schedules[index])
-            i +=1
+        try:
+            if schedules[index] not in parents:
+                #print("not in parents")
+                parents.append(schedules[index])
+                i +=1
+        except:
+            if schedules[-1] not in parents:
+                parents.append(schedules[-1])
     return parents
 
 
@@ -475,7 +479,7 @@ def elitist_selection(p_selection,schedules):
     #sort indices contains the indices of the best schedules in ascending order (worst to best)
     sort_indices = np.argsort(fitness_selection)
     
-    print(fitness_selection)
+    #print(fitness_selection)
     
     parents = []
     for i in range(n_parents):
@@ -514,18 +518,75 @@ def tournament_selection(p_selection,n_tournament,schedules):
             parents.append(tournament[best_index_from_tournament])
     
     # if the number of selected shedules is less than n_parents, fill the rest randomly
+    tmp = [sch for sch in schedules if sch not in parents]
     if len(parents) < n_parents:
         rest_to_add = n_parents-len(parents)
-        for sch in parents:
-            schedules.remove(sch)
-        np.random.shuffle(schedules)
+        np.random.shuffle(tmp)
         for i in range(rest_to_add):
-            parents.append(schedules[i])
+            parents.append(tmp[i])
             
     return parents
 
-def genetic_algorithm(pop_size):
-    return None       
+def genetic_algorithm(pop_size,week_n,max_iter):
+     
+    schedules = en.random_schedules(pop_size,week_n)
+    p_select_roulette = 0.25
+    p_select_elite = 0.5
+    p_select_tournament = 0.25
+    n_tournament = int(pop_size/10)
+    it = 0
+    parents = []
+    offsprings = []
+    
+    """
+    the main while loop carries out the selection proces to get the pooling mates
+    (i.e. the set of parents), which will then randomly produce offsprings
+    """
+
+    while it < max_iter:
+    
+        print("iteration: ",it)
+    
+        parents_tournament = tournament_selection(p_select_tournament,
+                                                  n_tournament, schedules)
+        parents_elite = elitist_selection(p_select_elite, schedules)
+        parents_roulette = roulette_wheel_selection(p_select_roulette, schedules)
+        
+        # first we select all parents from the roulette wheel and elitist selections
+        parents = parents_elite + parents_roulette + parents_tournament
+        
+        # parents probably contains duplicates so we remove them
+        parents = list(dict.fromkeys(parents))
+            
+        # if parents are still missing, we select them randomly from the ones that are not
+        # yet selected
+        not_selected = [sch for sch in schedules]
+        for i in range(pop_size-len(parents)):
+            parents.append(not_selected[i])
+    
+        """
+        Now we apply the crossover part. Here
+        we will select pop_size couples (possibly there will be twice the same), each
+        one of which will produce one offspring.
+        """
+        
+        offsprings = []
+        for i in range(pop_size):
+            
+            # we select 2 random parents to produce an offspring
+            parent1_index = np.random.randint(pop_size)
+            parent2_index = np.random.randint(pop_size)
+            
+            offspring = pseudo_crossover(parents[parent1_index], parents[parent2_index])
+            offsprings.append(offspring)
+            
+        # the produced offsprings become the next generation of parents
+        parents = offsprings
+        it += 1
+
+    
+    return offsprings
+
         
     
 

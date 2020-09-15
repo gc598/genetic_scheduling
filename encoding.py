@@ -62,7 +62,7 @@ def place_task_timetable(sch,task):
     #add the task to the machine's timetable
     index = sch.machine_i_idle_interval(task.mac_id,task.start_time,task.end_time)
     if index==-1:
-        print("not available mac",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
+        #print("not available mac",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return False
     machine_to_operate = sch.machines[task.mac_id][index]
     machine_to_operate.timetable.append(task)
@@ -70,7 +70,7 @@ def place_task_timetable(sch,task):
     #add the task to the analyst's timetable
     index = sch.analyst_idle_task(task)
     if index==-1:
-        print("not available an",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
+        #print("not available an",task.start_time,task.end_time,"task",str(task),"from job",str(task.job_id))
         return False
     appointed_analyst = sch.analysts[index]
     appointed_analyst.timetable.append(task)
@@ -96,7 +96,7 @@ def place_job_timetable(sch,job):
         #if it's not possible to fit this job in the schedule, return false
         if(current_task.end_time > max_time or not flag):
             remove_job_from_timetable(sch,job)
-            print("impossible: abort")    
+            #print("impossible: abort")    
             return False
     sch.order_by_start_time()
     return True
@@ -140,7 +140,7 @@ def randomly_place_job_timetable(job,sch):
         #if it's not possible to fit this job in the schedule, we restart the function
         if(current_task.end_time > max_time or flag==-1):
             remove_job_from_timetable(sch,job)
-            print("impossible: restart")    
+            #print("impossible: restart")    
             randomly_place_job_timetable(job,sch)
     sch.order_by_start_time()
                   
@@ -412,6 +412,33 @@ def create_empty_schedule(week_n):
             task.analysts_indices = []
             for u_id in dict_analysts[test_id]:
                 task.analysts_indices.append(dict_user_id[u_id])
+                
+    """
+    now we need to mark the non shift hours of the analysts as occupied.
+    """
+    
+    data_shift = dba.get_shift_users(connection)
+    
+    # shift_times_an will be used to contain the shift start and end times of each 
+    # analyst (tuple of times), indexed by its userID
+    shift_times_an = {}
+    
+    for user_id in data_shift["userID"].drop_duplicates():
+        shift_start = data_shift[data_shift["User_id"]==user_id].iloc[0]["ShiftStart"]
+        shift_end= data_shift[data_shift["User_id"]==user_id].iloc[0]["ShiftEnd"]
+        
+        # we now convert the shift times to the units used by the program
+        shift_start_time = shift_start.hour*10 + math.ceil(shift_start.minute /6)
+        shift_end_time = shift_end.hour*10 + math.ceil(shift_end.minute /6)
+        shift_times_an.update({user_id:(shift_start_time,shift_end_time)})
+        
+    for user_id in dict_user_id.keys():
+        if user_id in data_shift.keys():
+            analyst = analysts_obj[dict_user_id[user_id]]
+            
+        
+        
+        
                 
     """
     Now add the tasks to the jobs
