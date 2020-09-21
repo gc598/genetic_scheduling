@@ -259,6 +259,28 @@ def pseudo_crossover_normal(sch1,sch2):
 
 # version that uses randomly rearranged lists of jobs
 def pseudo_crossover(sch1,sch2):
+    """
+    
+
+    Parameters
+    ----------
+    sch1 : Schedule
+        1st parent schedule
+    sch2 : Schedule
+        2nd parent schedule
+        
+    returns an offspring schedule
+
+    This function iterates over the list of jobs (randomly shuffled) of each schedule.
+    At each step, it adds the job from schedule 1 with probability 0.5, and the one
+    from schedule 2 with the same probability.
+    If neither one can be added due to constraint violation, it is added to list of
+    jobs to randomly place later.
+    This later random placing of jobs can be viewed as a mutation, therefore the use
+    of this function will cancel the use of a mutation function in the genetic
+    algorithm.
+
+    """
     
     if len(sch1.timetable) != len(sch2.timetable):
         return None
@@ -289,7 +311,9 @@ def pseudo_crossover(sch1,sch2):
     
     prob = 0.5
     
-    
+    """
+    main loop that will select jobs from schedule 1 or schedule 2 randomly
+    """
     for i in range(len(jobs1)):
         p = random.uniform(0,1)
         flag = False

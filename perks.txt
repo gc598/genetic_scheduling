@@ -1,0 +1,15 @@
+											PERKS:
+
+			The following list of constraints is not taken into account:
+
+- tasks of the same job (ie stages of the same sample test) must be carried out on EXACTLY the same machine, not the a machine of the same group
+- analysts and reviewers are selected in the same way (therefore an analyst who carried out a phase of the job can also carry out the review task, which 				should not be the case)
+
+
+			ideas to optimize:
+
+- instead of using a naive objective function (1 if the job is on time, 0 othrrwise) use a smoother one, eg an exponential or Gaussian
+- use the list of usable machines and potential analysts in the Job object as opposed to the task object, which means that the same information will not need to be repeated for all the tasks of the same job
+- use a better heurisitc for the random allocation than just starting back if a job can't be placed
+- use a heuristic instead of generating completely random schedules, or take already generated schedules from an other program
+- reduce the number of different selection methods in the main genetic algorithm, because one iterations at the moment are really slow

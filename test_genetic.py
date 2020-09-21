@@ -11,6 +11,7 @@ import schedule as sc
 import encoding
 import copy
 import numpy as np
+import database_access as dba
 
 
 
@@ -32,11 +33,13 @@ u2 = sc.Task(30,2,3,[2,3,7,5])
 u1 = sc.Task(10,2,3,[2,3,7]) 
 job2 = sc.Job([copy.deepcopy(u1),copy.deepcopy(u2),copy.deepcopy(u3)],160,50,2)
 
+"""
 job_list = [copy.deepcopy(job0),copy.deepcopy(job1),copy.deepcopy(job2)]
 schedules_simple = encoding.generate_random_schedules(10, job_list)
 sch0 = schedules_simple[0]
 sch1 = schedules_simple[1]
 sch2 = schedules_simple[2]
+"""
 
 #off = ga.uniform_crossover(sch0,sch1)
 #mutant = ga.mutation(sch0,0.8,1)
@@ -54,6 +57,7 @@ schedules = encoding.random_schedules(100, 25)
 sc0 = schedules[0]
 sc1 = schedules[1]
 """
+
 
 pop_size = 100
 offsprings = ga.genetic_algorithm(pop_size, week_n,100)

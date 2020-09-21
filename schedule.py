@@ -131,6 +131,113 @@ class Analyst:
         new_analyst = Analyst(timetable=[],an_id=self.an_id,name=self.name,
                               user_id=self.user_id)
         return new_analyst
+    
+    def add_shift_task(self,shift_start,shift_end,start_day):
+        
+        """
+        shift_start: hour of the start of the shift (number from 0 to 24)
+        shift_end: hour of the end of the shift (number from 0 to 24)
+        strat_day: beginning of the current day, expressed in the program's time unit
+        
+        This function will add the tasks representing the fact that 
+        the analyst is not
+        available as the time span is not part of the shift hours for this day (the
+        day starting at start_day).
+        This function assumes that the analyst's timetable IS EMPTY
+        """
+        
+
+        tasks_shift = []
+        if shift_end < shift_start:
+            
+            """
+            we start by the case where the shift start a day and end the day after.
+            then every hour not in the shift will be represented as a task, which will be
+            added to the analyst's timetable
+            """
+            
+            duration = shift_start-shift_end
+            task = Task(duration= duration,job_id=-1,machine=None,analysts_ind=None,
+                        task_name = "not in shift")
+            task.start_time = shift_end+start_day
+            task.end_time = task.start_time + task.duration
+            tasks_shift.append(task)
+            
+        else:
+            
+            """
+            if the shift remains within the same day, we'll create 2 tasks
+            """
+            dur1 = shift_start
+            dur2 = 240-shift_end
+            task1 = Task(duration= dur1,job_id=-1,machine=None,analysts_ind=None,
+                        task_name = "not in shift")                        
+            task2 = Task(duration= dur2,job_id=-1,machine=None,analysts_ind=None,
+                        task_name = "not in shift")
+            task1.start_time = start_day
+            task1.end_time = task1.start_time + task1.duration
+            task2.start_time = start_day + shift_end
+            task2.end_time = task2.start_time + task2.duration
+            tasks_shift.append(task1)
+            tasks_shift.append(task2)
+            
+        for task in tasks_shift:
+            self.timetable.append(task)
+            
+    def fuse_shifts(self):
+        
+        """
+        This function fuses the connex non shift times (ie fuses the non shift times
+        who start at the time the previous one ends)
+        
+        THIS FUNCTION ASSUMES THAT ONLY SHIFT TASKS ARE PRESENT IN THE ANALYST'S 
+        TIMETABLE
+        """            
+        
+        if len(self.timetable) <=1:
+            return
+        for task in self.timetable:
+            if task.task_name != "not in shift":
+                print("not only shift tasks in the timetable")
+                return
+            
+        task_shift_to_remove = []
+        task_shift_to_add = []
+        
+        for i in range(len(self.timetable)-1):
+            task0 = self.timetable[i]
+            task1 = self.timetable[i+1]
+            if task0.end_time == task1.start_time:
+                new_task = Task(duration=task0.duration+task1.duration,job_id=-1,
+                                machine = None,analysts_ind=None,
+                                task_name="not in shift")
+                new_task.start_time = task0.start_time
+                new_task.end_time = new_task.start_time+new_task.duration
+                task_shift_to_remove.append(task0)
+                task_shift_to_remove.append(task1)
+                task_shift_to_add.append(new_task)
+        
+        for task_shift in task_shift_to_remove:
+            if task_shift in self.timetable:
+                self.timetable.remove(task_shift)
+                
+        for task_shift in task_shift_to_add:
+            self.timetable.append(task_shift)
+                
+        """
+        now we sort the timetable by ascending order of shift task's start times
+        """
+        
+        sorted_timetable = []
+        start_times_list = [task.start_time for task in self.timetable]
+        sorted_indices = np.argsort(start_times_list)
+        for i in sorted_indices:
+            sorted_timetable.append(self.timetable[i])
+        self.timetable = sorted_timetable
+        
+        
+        
+        
         
 
 class Task:
@@ -152,7 +259,8 @@ class Task:
         
     def print_task(self):
         tup = (self.start_time,self.end_time)
-        print("task: ",str(self),str(tup),"on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
+        print("task: ",str(self)," , ",self.task_name, str(tup),
+              "on machine: ",str(self.mac_id),"in job: ",str(self.job_id))
         
     def copy_task(self):
         copied_task = Task(self.duration,self.job_id,self.mac_id

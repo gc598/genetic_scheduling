@@ -18,6 +18,7 @@ import random
 import database_access as dba
 import pandas as pd
 import math
+import numpy as np
 
 """
 removes the given task from the given schedule.updates machines consequently
@@ -31,17 +32,19 @@ def remove_task_from_timetable(sch,task):
         pass
     
     #removes task from machine's timetable
-    machines = sch.machines[task.mac_id]
-    for machine in machines:
-        if task in machine.timetable:
-            machine.timetable.remove(task)
+    if task.mac_id != None:
+        machines = sch.machines[task.mac_id]
+        for machine in machines:
+            if task in machine.timetable:
+                machine.timetable.remove(task)
             
         
     #removes task from analyst's timetable
-    for index in range(len(task.analysts_indices)):
-        analyst = sch.analysts[index]
-        if task in analyst.timetable:
-            analyst.timetable.remove(task)
+    if task.analysts_indices:
+        for index in range(len(task.analysts_indices)):
+            analyst = sch.analysts[index]
+            if task in analyst.timetable:
+                analyst.timetable.remove(task)
         
 
 def remove_job_from_timetable(sch,job):
@@ -423,18 +426,28 @@ def create_empty_schedule(week_n):
     # analyst (tuple of times), indexed by its userID
     shift_times_an = {}
     
-    for user_id in data_shift["userID"].drop_duplicates():
-        shift_start = data_shift[data_shift["User_id"]==user_id].iloc[0]["ShiftStart"]
-        shift_end= data_shift[data_shift["User_id"]==user_id].iloc[0]["ShiftEnd"]
+    for user_id in data_shift["UserID"].drop_duplicates():
+        shift_start = data_shift[data_shift["UserID"]==user_id].iloc[0]["ShiftStart"]
+        shift_end= data_shift[data_shift["UserID"]==user_id].iloc[0]["ShiftEnd"]
         
         # we now convert the shift times to the units used by the program
         shift_start_time = shift_start.hour*10 + math.ceil(shift_start.minute /6)
         shift_end_time = shift_end.hour*10 + math.ceil(shift_end.minute /6)
         shift_times_an.update({user_id:(shift_start_time,shift_end_time)})
         
+    max_time = get_max_time(data_tests)
     for user_id in dict_user_id.keys():
-        if user_id in data_shift.keys():
+        #print(user_id, data_shift.keys())
+        if user_id in dict_user_id.keys():
             analyst = analysts_obj[dict_user_id[user_id]]
+            
+            # we iterate over each start of day, which corresponds to 240 in the 
+            # program's unit
+            for start_day in np.arange(0,max_time,240):
+                shift_start_time = shift_times_an[user_id][0]
+                shift_end_time = shift_times_an[user_id][1]
+                analyst.add_shift_task(shift_start_time,shift_end_time,start_day) 
+            analyst.fuse_shifts()
             
         
         

@@ -11,6 +11,10 @@ import sqlalchemy as sa
 import pandas as pd
 import sys
 
+"""
+ONLY USABLE FOR A LOCAL SERVER
+"""
+
 SERVER = "LAPTOP-MBMTL92H"
 DB = "SchedulingToolDev"
 DRIVER = "SQL Server Native Client 11.0"
@@ -245,11 +249,7 @@ def get_shift_users(connection):
     finally:
         return data
 
-     
 
-
-conn= sqlalchemy_connection()
-data = get_shift_users(conn)
 
 
 
